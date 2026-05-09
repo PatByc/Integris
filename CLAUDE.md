@@ -38,7 +38,7 @@ Frontend:
 
 Backend:
 - FastAPI
-- Python
+- Python 3.12 (do not use 3.14 yet)
 - Pydantic
 
 Database/Auth/Storage:
