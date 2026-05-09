@@ -1,0 +1,23 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.core.config import settings
+
+app = FastAPI(
+    title="Integris API",
+    version="0.1.0",
+    description="KSeF invoice processing middleware",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[settings.app_url],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.get("/health", tags=["system"])
+async def health() -> dict:
+    return {"status": "ok", "env": settings.app_env}
