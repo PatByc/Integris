@@ -1,42 +1,33 @@
-```gitignore
-# Dependencies
-node_modules/
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
-# Build output
-.next/
-dist/
-build/
-coverage/
+# Python build artifacts
+*.egg-info/
+.eggs/
 
-# Environment files
-.env
-.env.*
-!.env.example
+# Alembic
+alembic/versions/__pycache__/
 
-# Logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-pnpm-debug.log*
+# Frontend env
+frontend/.env.local
 
-# OS files
-.DS_Store
-Thumbs.db
+# Backend env variants
+backend/.env
+backend/.env.*
 
-# IDE
-.vscode/
-.idea/
+# Local databases
+*.db
+*.sqlite3
 
-# Claude local state
-.claude/tmp/
-.claude/cache/
+# Redis/Docker local state
+docker-data/
 
-# Testing
-playwright-report/
-test-results/
-
-# Misc
-*.pem
-*.key
-*.sqlite
-```
+# macOS / Windows junk
+Desktop.ini
