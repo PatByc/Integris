@@ -1,0 +1,11 @@
+.env
+.env.*
+!.env.example
+frontend/.next
+frontend/node_modules
+backend/.venv
+workers/__pycache__
+**/__pycache__
+**/*.pyc
+.git
+.dev-pids

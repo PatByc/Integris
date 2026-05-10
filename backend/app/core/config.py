@@ -28,10 +28,15 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     ai_model: str = "gpt-4.1-mini"
 
-    ksef_env: str = "sandbox"
+    # KSEF_ENV: dry_run | sandbox | production
+    # sandbox default URL: https://api-test.ksef.mf.gov.pl/v2
+    # production URL:      https://api.ksef.mf.gov.pl/v2
+    # KSEF_API_URL overrides the default for the chosen env (optional)
+    ksef_env: str = "dry_run"
     ksef_api_url: str = ""
     ksef_client_id: str = ""
     ksef_client_secret: str = ""
+    ksef_public_key_pem: str = ""
 
     jwt_secret: str
 

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import logo from "@/logo.png";
 import { apiPost, ApiError } from "@/lib/api";
 
 export default function CompanySetupPage() {
@@ -29,6 +31,7 @@ export default function CompanySetupPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="w-full max-w-sm rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
+        <Image src={logo} alt="Integris" height={36} className="mb-6 h-9 w-auto" />
         <h1 className="mb-2 text-2xl font-bold">Set up your company</h1>
         <p className="mb-6 text-sm text-gray-600">
           You&apos;ll be the owner of this company workspace.

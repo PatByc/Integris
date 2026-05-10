@@ -33,6 +33,11 @@ const EVENT_LABELS: Record<string, string> = {
   "review.approved": "Approved",
   "xml_generation.succeeded": "XML generated",
   "xml_generation.failed": "XML failed",
+  "ksef.submission.requested": "Submission requested",
+  "ksef.submission.succeeded": "Submitted to KSeF",
+  "ksef.submission.failed": "KSeF submission failed",
+  "ksef.upo.accepted": "KSeF accepted",
+  "ksef.upo.rejected": "KSeF rejected",
 };
 
 interface HistoryEvent {
@@ -50,6 +55,11 @@ export function StatusBadge({ documentId, status }: Props) {
   const [history, setHistory] = useState<HistoryEvent[] | null>(null);
   const [loading, setLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setHistory(null);
+    setOpen(false);
+  }, [status]);
 
   useEffect(() => {
     if (!open) return;

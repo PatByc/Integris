@@ -3,17 +3,17 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
-from fastapi.responses import Response
+from fastapi.responses import Response, JSONResponse
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_membership, get_current_user
 from app.core.database import get_db
-from app.core.queue import enqueue_extraction_job, enqueue_ocr_job, enqueue_xml_job
+from app.core.queue import enqueue_extraction_job, enqueue_ksef_submission_job, enqueue_ocr_job, enqueue_xml_job
 from app.models.company import CompanyMembership
 from app.models.document import AuditEvent
-from app.repositories import invoice_draft_repository, validation_error_repository, xml_export_repository
+from app.repositories import invoice_draft_repository, ksef_submission_repository, validation_error_repository, xml_export_repository
 from app.repositories.document_repository import get_by_id, list_by_company
 from app.schemas.document_schema import DocumentListOut, DocumentOut
 from app.schemas.invoice_draft_schema import InvoiceDraftOut, InvoiceDraftUpdate, LineItemOut
@@ -55,12 +55,29 @@ async def list_documents(
     db: AsyncSession = Depends(get_db),
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
+    status: str | None = Query(default=None),
+    q: str | None = Query(default=None),
 ) -> DocumentListOut:
-    items, total = await list_by_company(db, membership.company_id, limit=limit, offset=offset)
+    items, total = await list_by_company(db, membership.company_id, limit=limit, offset=offset, status=status, q=q)
     return DocumentListOut(
         items=[DocumentOut.model_validate(d) for d in items],
         total=total,
     )
+
+
+@router.delete("/{document_id}", status_code=204)
+async def delete_document(
+    document_id: UUID,
+    user: Annotated[dict, Depends(get_current_user)],
+    membership: Annotated[CompanyMembership, Depends(get_current_membership)],
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    doc = await get_by_id(db, document_id=document_id, company_id=membership.company_id)
+    if doc is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+    await document_service.delete_document(db, document_id, membership.company_id, doc.storage_path)
+    await db.commit()
+    return Response(status_code=204)
 
 
 @router.get("/{document_id}", response_model=DocumentOut)
@@ -229,6 +246,82 @@ async def get_document_history(
     )
     events = result.scalars().all()
     return [AuditEventOut.model_validate(e) for e in events]
+
+
+@router.post("/{document_id}/submit", response_model=DocumentOut)
+async def submit_to_ksef(
+    document_id: UUID,
+    user: Annotated[dict, Depends(get_current_user)],
+    membership: Annotated[CompanyMembership, Depends(get_current_membership)],
+    db: AsyncSession = Depends(get_db),
+) -> DocumentOut:
+    doc = await get_by_id(db, document_id=document_id, company_id=membership.company_id)
+    if doc is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+    if doc.status != "xml_generated":
+        raise HTTPException(status_code=422, detail="Document must be in xml_generated status to submit")
+
+    await audit_service.log(
+        db,
+        company_id=membership.company_id,
+        event_type="ksef.submission.requested",
+        user_id=user["user_id"],
+        document_id=doc.id,
+        metadata={},
+    )
+    await db.commit()
+    await db.refresh(doc)
+    enqueue_ksef_submission_job(doc.id)
+    return DocumentOut.model_validate(doc)
+
+
+@router.get("/{document_id}/upo")
+async def get_upo(
+    document_id: UUID,
+    membership: Annotated[CompanyMembership, Depends(get_current_membership)],
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    doc = await get_by_id(db, document_id=document_id, company_id=membership.company_id)
+    if doc is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+    if doc.status != "accepted":
+        raise HTTPException(status_code=404, detail="UPO not available")
+    submission = await ksef_submission_repository.get_accepted_for_document(db, document_id)
+    if submission is None or not submission.upo_url:
+        raise HTTPException(status_code=404, detail="UPO not available (dry run mode)")
+    return {"upo_url": submission.upo_url}
+
+
+@router.post("/{document_id}/retry-submission", response_model=DocumentOut)
+async def retry_submission(
+    document_id: UUID,
+    user: Annotated[dict, Depends(get_current_user)],
+    membership: Annotated[CompanyMembership, Depends(get_current_membership)],
+    db: AsyncSession = Depends(get_db),
+) -> DocumentOut:
+    doc = await get_by_id(db, document_id=document_id, company_id=membership.company_id)
+    if doc is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+    if doc.status != "rejected":
+        raise HTTPException(status_code=422, detail="Document is not in rejected status")
+
+    doc.status = "xml_generated"
+    doc.retry_count = 0
+    await db.flush()
+
+    await audit_service.log(
+        db,
+        company_id=membership.company_id,
+        event_type="ksef.submission.requested",
+        user_id=user["user_id"],
+        document_id=doc.id,
+        metadata={"retry": True},
+    )
+
+    await db.commit()
+    await db.refresh(doc)
+    enqueue_ksef_submission_job(doc.id)
+    return DocumentOut.model_validate(doc)
 
 
 @router.post("/{document_id}/retry-extraction", response_model=DocumentOut)

@@ -9,7 +9,9 @@ from app.models.company import Company, CompanyMembership, Profile
 
 async def get_user_membership(db: AsyncSession, user_id: UUID) -> CompanyMembership | None:
     result = await db.execute(
-        select(CompanyMembership).where(CompanyMembership.user_id == user_id)
+        select(CompanyMembership)
+        .where(CompanyMembership.user_id == user_id)
+        .limit(1)
     )
     return result.scalar_one_or_none()
 

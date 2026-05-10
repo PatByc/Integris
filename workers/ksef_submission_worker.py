@@ -10,6 +10,7 @@ from workers.db import (
     get_xml_export_for_document,
     insert_audit_event,
     insert_ksef_submission,
+    update_document_retry_count,
     update_document_status,
     update_ksef_submission,
 )
@@ -17,6 +18,22 @@ from workers.ksef_client import KsefClient, KsefError
 from workers.queue import KSEF_QUEUE
 
 logger = logging.getLogger(__name__)
+
+_KSEF_ENV_SANDBOX = "sandbox"
+_KSEF_ENV_PRODUCTION = "production"
+_KSEF_ENV_DRY_RUN = "dry_run"
+
+_DEFAULT_URLS = {
+    _KSEF_ENV_SANDBOX: "https://api-test.ksef.mf.gov.pl/v2",
+    _KSEF_ENV_PRODUCTION: "https://api.ksef.mf.gov.pl/v2",
+}
+
+
+def _resolve_api_url(ksef_env: str) -> str:
+    override = os.environ.get("KSEF_API_URL", "").strip()
+    if override:
+        return override
+    return _DEFAULT_URLS.get(ksef_env, "")
 
 
 class KsefSubmissionWorker(BaseWorker):
@@ -63,40 +80,48 @@ class KsefSubmissionWorker(BaseWorker):
             submission_id = insert_ksef_submission(conn, document_id, xml_export_id)
             conn.commit()
 
+            ksef_env = os.environ.get("KSEF_ENV", _KSEF_ENV_DRY_RUN).strip().lower()
+
             try:
-                client = KsefClient(
-                    api_url=os.environ.get("KSEF_API_URL", ""),
-                    nip=os.environ.get("KSEF_CLIENT_ID", ""),
-                    token=os.environ.get("KSEF_CLIENT_SECRET", ""),
-                    public_key_pem=os.environ.get("KSEF_PUBLIC_KEY_PEM", ""),
-                )
-                client.authenticate()
-                client.open_session()
-                try:
-                    ksef_ref = client.submit_invoice(xml_bytes)
-                finally:
-                    client.close_session()
-                    client.close()
+                if ksef_env == _KSEF_ENV_DRY_RUN:
+                    ksef_ref = f"DRY-RUN-{str(document_id)[:8].upper()}"
+                    session_ref = None
+                    logger.info("DRY RUN: simulated KSeF submission for document %s (fake_ref=%s)", document_id, ksef_ref)
+                    audit_meta = {"ksef_reference_id": ksef_ref, "dry_run": True}
+                elif ksef_env in (_KSEF_ENV_SANDBOX, _KSEF_ENV_PRODUCTION):
+                    if ksef_env == _KSEF_ENV_PRODUCTION:
+                        logger.warning("Submitting to PRODUCTION KSeF for document %s", document_id)
+                    client = KsefClient(
+                        api_url=_resolve_api_url(ksef_env),
+                        nip=os.environ.get("KSEF_CLIENT_ID", ""),
+                        token=os.environ.get("KSEF_CLIENT_SECRET", ""),
+                        public_key_pem=os.environ.get("KSEF_PUBLIC_KEY_PEM", ""),
+                    )
+                    client.authenticate()
+                    session_ref = client.open_session()
+                    try:
+                        ksef_ref = client.submit_invoice(xml_bytes)
+                    finally:
+                        client.close_session()
+                        client.close()
+                    logger.info("Invoice submitted to KSeF (%s) for document %s (ref=%s)", ksef_env, document_id, ksef_ref)
+                    audit_meta = {"ksef_reference_id": ksef_ref, "env": ksef_env}
+                else:
+                    raise ValueError(f"Unknown KSEF_ENV value: {ksef_env!r}. Expected: dry_run, sandbox, production")
 
                 update_ksef_submission(
                     conn,
                     submission_id,
                     status="submitted",
                     ksef_reference_id=ksef_ref,
+                    ksef_session_ref=session_ref,
                     response_payload={"referenceNumber": ksef_ref},
                 )
                 update_document_status(conn, document_id, "submitted")
                 conn.commit()
 
-                insert_audit_event(
-                    conn,
-                    document_id,
-                    company_id,
-                    "ksef.submission.succeeded",
-                    {"ksef_reference_id": ksef_ref},
-                )
+                insert_audit_event(conn, document_id, company_id, "ksef.submission.succeeded", audit_meta)
                 conn.commit()
-                logger.info("Invoice submitted to KSeF for document %s (ref=%s)", document_id, ksef_ref)
 
             except Exception as exc:
                 error_msg = str(exc)
@@ -106,7 +131,7 @@ class KsefSubmissionWorker(BaseWorker):
                     status="rejected",
                     error_details={"error": error_msg, "attempt": attempt},
                 )
-                update_document_retry_count_local(conn, document_id, attempt)
+                update_document_retry_count(conn, document_id, attempt)
                 conn.commit()
 
                 if attempt >= self.MAX_RETRIES:
@@ -123,14 +148,6 @@ class KsefSubmissionWorker(BaseWorker):
 
         finally:
             conn.close()
-
-
-def update_document_retry_count_local(conn, document_id: UUID, count: int) -> None:
-    with conn.cursor() as cur:
-        cur.execute(
-            "UPDATE documents SET retry_count = %s, updated_at = NOW() WHERE id = %s",
-            (count, str(document_id)),
-        )
 
 
 if __name__ == "__main__":

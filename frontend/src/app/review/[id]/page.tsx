@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { apiGet } from "@/lib/api";
+import { AppHeader } from "@/components/AppHeader";
 import { PdfPreview } from "@/components/review/PdfPreview";
 import { InvoiceForm } from "@/components/review/InvoiceForm";
 import { ValidationErrors } from "@/components/review/ValidationErrors";
@@ -100,19 +101,19 @@ export default function ReviewDetailPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-6 py-4">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <div>
-            <h1 className="text-lg font-semibold">Review invoice</h1>
-            <p className="text-xs text-gray-400 font-mono">{id}</p>
-          </div>
-          <Link href="/review" className="text-sm text-blue-600 hover:underline">
-            ← Review queue
-          </Link>
-        </div>
-      </header>
+      <AppHeader />
 
-      <main className="mx-auto flex w-full max-w-7xl flex-1 gap-6 px-6 py-6">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-3">
+        <div>
+          <h1 className="text-lg font-semibold">Review invoice</h1>
+          <p className="font-mono text-xs text-gray-400">{id}</p>
+        </div>
+        <Link href="/review" className="text-sm text-blue-600 hover:underline">
+          ← Review queue
+        </Link>
+      </div>
+
+      <main className="mx-auto flex w-full max-w-7xl flex-1 gap-6 px-6 py-2">
         {/* Left: PDF */}
         <div className="flex-1 min-h-[600px]">
           <PdfPreview documentId={id} />

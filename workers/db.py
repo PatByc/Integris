@@ -3,6 +3,8 @@ import os
 import uuid
 from uuid import UUID
 
+MAX_POLLING_ATTEMPTS = 20
+
 from dotenv import load_dotenv
 
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"))
@@ -237,6 +239,7 @@ def update_ksef_submission(
     submission_id: str,
     status: str,
     ksef_reference_id: str | None = None,
+    ksef_session_ref: str | None = None,
     response_payload: dict | None = None,
     error_details: dict | None = None,
 ) -> None:
@@ -246,6 +249,7 @@ def update_ksef_submission(
             UPDATE ksef_submissions
             SET status = %s,
                 ksef_reference_id = COALESCE(%s, ksef_reference_id),
+                ksef_session_ref = COALESCE(%s, ksef_session_ref),
                 response_payload = COALESCE(%s::jsonb, response_payload),
                 error_details = COALESCE(%s::jsonb, error_details),
                 updated_at = NOW()
@@ -254,6 +258,7 @@ def update_ksef_submission(
             (
                 status,
                 ksef_reference_id,
+                ksef_session_ref,
                 json.dumps(response_payload) if response_payload is not None else None,
                 json.dumps(error_details) if error_details is not None else None,
                 submission_id,
@@ -286,3 +291,53 @@ def insert_validation_errors(
                     error.message,
                 ),
             )
+
+
+def get_submitted_ksef_submissions(conn) -> list[dict]:
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT ks.id, ks.document_id, ks.ksef_reference_id,
+                   ks.ksef_session_ref, ks.polling_attempts,
+                   d.company_id
+            FROM ksef_submissions ks
+            JOIN documents d ON d.id = ks.document_id
+            WHERE ks.status = 'submitted'
+              AND ks.polling_attempts < %s
+            ORDER BY ks.created_at ASC
+            """,
+            (MAX_POLLING_ATTEMPTS,),
+        )
+        return cur.fetchall()
+
+
+def update_ksef_submission_poll_result(
+    conn,
+    submission_id: str,
+    status: str,
+    polling_attempts: int,
+    ksef_number: str | None = None,
+    upo_url: str | None = None,
+    error_details: dict | None = None,
+) -> None:
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            UPDATE ksef_submissions
+            SET status           = %s,
+                polling_attempts = %s,
+                ksef_number      = COALESCE(%s, ksef_number),
+                upo_url          = COALESCE(%s, upo_url),
+                error_details    = COALESCE(%s::jsonb, error_details),
+                updated_at       = NOW()
+            WHERE id = %s
+            """,
+            (
+                status,
+                polling_attempts,
+                ksef_number,
+                upo_url,
+                json.dumps(error_details) if error_details is not None else None,
+                submission_id,
+            ),
+        )

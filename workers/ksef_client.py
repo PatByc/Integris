@@ -28,6 +28,10 @@ class KsefSubmissionError(KsefError):
     pass
 
 
+class KsefPollingError(KsefError):
+    pass
+
+
 class KsefClient:
     """
     KSeF API v2 client.
@@ -230,3 +234,18 @@ class KsefClient:
 
     def close(self) -> None:
         self._http.close()
+
+    def get_invoice_status(self, session_ref: str, invoice_ref: str) -> dict:
+        """Poll GET /sessions/{session_ref}/invoices/{invoice_ref}."""
+        resp = self._http.get(
+            f"{self._base}/sessions/{session_ref}/invoices/{invoice_ref}",
+            headers={"Authorization": f"Bearer {self._access_token}"},
+        )
+        if not resp.is_success:
+            raise KsefPollingError(f"Poll failed (HTTP {resp.status_code}): {resp.text}")
+        data = resp.json()
+        return {
+            "status_code": data["status"]["code"],
+            "ksef_number": data.get("ksefNumber"),
+            "upo_url":     data.get("upoDownloadUrl"),
+        }

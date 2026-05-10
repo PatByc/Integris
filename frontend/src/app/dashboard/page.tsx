@@ -1,11 +1,17 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { DocumentsTable } from "@/components/DocumentsTable";
+import { AppHeader } from "@/components/AppHeader";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; status?: string }>;
+}) {
   const supabase = await createSupabaseServerClient();
   const {
     data: { session },
@@ -28,7 +34,12 @@ export default async function DashboardPage() {
 
   const { company } = await companyRes.json();
 
-  const docsRes = await fetch(`${API_URL}/api/v1/documents?limit=50`, {
+  const { q = "", status = "" } = await searchParams;
+  const params = new URLSearchParams({ limit: "20" });
+  if (q) params.set("q", q);
+  if (status) params.set("status", status);
+
+  const docsRes = await fetch(`${API_URL}/api/v1/documents?${params}`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });
@@ -38,12 +49,13 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-6 py-4">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <div>
-            <h1 className="text-lg font-semibold">Integris</h1>
-            <p className="text-sm text-gray-500">{company?.name}</p>
-          </div>
+      <Suspense>
+        <AppHeader />
+      </Suspense>
+
+      <main className="mx-auto max-w-5xl px-6 py-8">
+        <div className="mb-6 flex items-center justify-between">
+          <p className="text-sm text-gray-500">{company?.name}</p>
           <Link
             href="/upload"
             className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
@@ -51,14 +63,13 @@ export default async function DashboardPage() {
             Upload invoice
           </Link>
         </div>
-      </header>
-
-      <main className="mx-auto max-w-5xl px-6 py-8">
-        <DocumentsTable
-          token={token}
-          initialDocuments={initialDocuments}
-          initialTotal={initialTotal}
-        />
+        <Suspense>
+          <DocumentsTable
+            token={token}
+            initialDocuments={initialDocuments}
+            initialTotal={initialTotal}
+          />
+        </Suspense>
       </main>
     </div>
   );

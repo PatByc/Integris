@@ -21,6 +21,10 @@ class KsefSubmission(Base):
         PG_UUID(as_uuid=True), ForeignKey("xml_exports.id", ondelete="RESTRICT"), nullable=False
     )
     ksef_reference_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    ksef_session_ref: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    ksef_number: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    upo_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    polling_attempts: Mapped[int] = mapped_column(nullable=False, default=0)
     status: Mapped[str] = mapped_column(String, nullable=False, default="pending")
     request_payload: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
     response_payload: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)

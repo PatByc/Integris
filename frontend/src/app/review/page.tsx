@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { AppHeader } from "@/components/AppHeader";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -40,16 +42,17 @@ export default async function ReviewQueuePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-6 py-4">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
+      <Suspense>
+        <AppHeader />
+      </Suspense>
+
+      <main className="mx-auto max-w-5xl px-6 py-8">
+        <div className="mb-6 flex items-center justify-between">
           <h1 className="text-lg font-semibold">Review queue</h1>
           <Link href="/dashboard" className="text-sm text-blue-600 hover:underline">
             ← Dashboard
           </Link>
         </div>
-      </header>
-
-      <main className="mx-auto max-w-5xl px-6 py-8">
         {reviewDocs.length === 0 ? (
           <div className="rounded-lg border border-dashed border-gray-300 bg-white py-16 text-center">
             <p className="text-gray-500">No invoices awaiting review.</p>

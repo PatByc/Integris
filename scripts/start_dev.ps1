@@ -19,10 +19,12 @@ $enc = @(
     (Get-Encoded "Set-Location '$root\frontend'; npm run dev"),
     (Get-Encoded "Set-Location '$root'; backend\.venv\Scripts\python -m workers.ocr_worker"),
     (Get-Encoded "Set-Location '$root'; backend\.venv\Scripts\python -m workers.extraction_worker"),
-    (Get-Encoded "Set-Location '$root'; backend\.venv\Scripts\python -m workers.xml_generation_worker")
+    (Get-Encoded "Set-Location '$root'; backend\.venv\Scripts\python -m workers.xml_generation_worker"),
+    (Get-Encoded "Set-Location '$root'; backend\.venv\Scripts\python -m workers.ksef_submission_worker"),
+    (Get-Encoded "Set-Location '$root'; backend\.venv\Scripts\python -m workers.ksef_upo_polling_worker")
 )
 
-$titles = @("Backend", "Frontend", "OCR Worker", "Extraction Worker", "XML Worker")
+$titles = @("Backend", "Frontend", "OCR Worker", "Extraction Worker", "XML Worker", "KSeF Worker", "UPO Polling Worker")
 
 Write-Host ""
 Write-Host "Starting Integris dev services..." -ForegroundColor Yellow
@@ -30,17 +32,17 @@ Write-Host ""
 
 if (Get-Command wt -ErrorAction SilentlyContinue) {
     # Windows Terminal: open all 4 as tabs in one window
-    $tabs = for ($i = 0; $i -lt 5; $i++) {
+    $tabs = for ($i = 0; $i -lt 7; $i++) {
         "new-tab --title `"$($titles[$i])`" -- powershell -NoExit -EncodedCommand $($enc[$i])"
     }
     $wtArgs = $tabs -join " ; "
     $proc = Start-Process wt -ArgumentList $wtArgs -PassThru
     $proc.Id | Set-Content $pidFile
-    Write-Host "  Opened 5 tabs in Windows Terminal (PID $($proc.Id))" -ForegroundColor Cyan
+    Write-Host "  Opened 7 tabs in Windows Terminal (PID $($proc.Id))" -ForegroundColor Cyan
 } else {
     # Fallback: separate PowerShell windows
     $pids = @()
-    for ($i = 0; $i -lt 5; $i++) {
+    for ($i = 0; $i -lt 7; $i++) {
         $proc = Start-Process powershell -ArgumentList "-NoExit", "-EncodedCommand", $enc[$i] -PassThru
         $pids += $proc.Id
         Write-Host "  started  Integris: $($titles[$i])  (PID $($proc.Id))" -ForegroundColor Cyan
@@ -49,7 +51,7 @@ if (Get-Command wt -ErrorAction SilentlyContinue) {
 }
 
 Write-Host ""
-Write-Host "All 5 services started." -ForegroundColor Green
+Write-Host "All 7 services started." -ForegroundColor Green
 Write-Host ""
 Write-Host "  Backend   http://localhost:8000" -ForegroundColor DarkGray
 Write-Host "  API docs  http://localhost:8000/docs" -ForegroundColor DarkGray
