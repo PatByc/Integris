@@ -142,6 +142,17 @@ uploaded
                                                          → cancelled
 ```
 
+## Official standards used
+
+This project integrates against the **latest official Ministerstwo Finansów (MF) stack**:
+
+| Standard | Source | Location in repo |
+|----------|--------|-----------------|
+| FA(3) invoice schema (XSD) | [ksef-docs on GitHub](https://github.com/CIRFMF/ksef-docs/blob/main/faktury/schemy/FA/schemat_FA(3)_v1-0E.xsd) — CIRFMF (official MF repository) | `references/schemat_FA(3)_v1-0E.xsd` |
+| KSeF API specification | KSeF OpenAPI 3.0.4 (official MF release) | `references/KSeF Openapi spe 3.0.4.json` |
+
+The FA(3) XML generator (`workers/fa3_xml.py`) targets namespace `http://crd.gov.pl/wzor/2025/06/25/13775/` and schema version `1-0E`. When MF publishes a new schema version, update the XSD in `/references` and bump the namespace and `wersjaSchemy` attribute in the generator.
+
 ## Architecture rules
 
 - AI may interpret data. AI must never be the source of truth.

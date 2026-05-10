@@ -42,7 +42,8 @@
       "Read(**/*secret*)",
       "Read(**/*credential*)",
       "Read(**/*.pem)",
-      "Read(**/*.key)"
+      "Read(**/*.key)",
+      "Read(**/secrets/*)"
     ]
   }
 }

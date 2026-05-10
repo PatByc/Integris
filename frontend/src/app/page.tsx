@@ -1,8 +1,5 @@
+import { redirect } from "next/navigation";
+
 export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4">
-      <h1 className="text-4xl font-bold tracking-tight">Integris</h1>
-      <p className="text-muted-foreground">KSeF Invoice Processing Platform</p>
-    </main>
-  );
+  redirect("/login");
 }

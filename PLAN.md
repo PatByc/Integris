@@ -180,7 +180,7 @@ Tables: `companies`, `profiles`, `company_memberships`, `documents`, `ocr_result
 
 ---
 
-### Phase 1 — Auth, Company, Upload
+### Phase 1 — Auth, Company, Upload ✅ COMPLETE (2026-05-09)
 **Goal:** Users can sign up, create/join a company, and upload a PDF invoice.
 
 **What gets built:**
@@ -221,12 +221,18 @@ frontend/src/
 ```
 
 **Acceptance criteria:**
-- [ ] User can register, log in, log out
-- [ ] User can create a company on first login
-- [ ] User can upload a PDF (≤25 MB); rejected if too large or not PDF
-- [ ] Document appears in dashboard with status `uploaded`
-- [ ] Company A user cannot see Company B documents (enforced at API)
-- [ ] Audit event logged on upload
+- [x] User can register, log in, log out
+- [x] User can create a company on first login
+- [x] User can upload a PDF (≤25 MB); rejected if too large or not PDF
+- [x] Document appears in dashboard with status `uploaded`
+- [x] Company A user cannot see Company B documents (enforced at API — 404 not 403)
+- [x] Audit event logged on upload
+
+**Notes:**
+- Invite flow deferred — not in acceptance criteria for Phase 1
+- Storage upload uses httpx directly (async-native, avoids blocking supabase-py sync client)
+- NIP checksum validation (modulo-11) implemented in Pydantic schema
+- `metadata` column attribute renamed to `event_metadata` in AuditEvent ORM model (SQLAlchemy reserved name)
 
 ---
 
