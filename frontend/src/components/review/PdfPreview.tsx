@@ -43,7 +43,7 @@ function PageThumbnail({
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
       try {
-        await page.render({ canvasContext: ctx, viewport }).promise;
+        await page.render({ canvasContext: ctx, viewport, canvas }).promise;
       } catch {
         // render cancelled — ignore
       }
@@ -132,7 +132,7 @@ export function PdfPreview({ documentId }: Props) {
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      const task = page.render({ canvasContext: ctx, viewport });
+      const task = page.render({ canvasContext: ctx, viewport, canvas });
       renderTaskRef.current = task;
       try {
         await task.promise;

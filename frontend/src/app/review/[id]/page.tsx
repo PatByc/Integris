@@ -108,9 +108,14 @@ export default function ReviewDetailPage() {
           <h1 className="text-lg font-semibold">Review invoice</h1>
           <p className="font-mono text-xs text-gray-400">{id}</p>
         </div>
-        <Link href="/review" className="text-sm text-blue-600 hover:underline">
-          ← Review queue
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href={`/audit/${id}`} className="text-sm text-gray-500 hover:underline">
+            History
+          </Link>
+          <Link href="/review" className="text-sm text-blue-600 hover:underline">
+            ← Review queue
+          </Link>
+        </div>
       </div>
 
       <main className="mx-auto flex w-full max-w-7xl flex-1 gap-6 px-6 py-2">

@@ -25,6 +25,8 @@ from app.services.company_service import ensure_profile
 class AuditEventOut(BaseModel):
     event_type: str
     created_at: datetime
+    user_id: UUID | None = None
+    event_metadata: dict = {}
     model_config = ConfigDict(from_attributes=True)
 
 router = APIRouter(prefix="/documents", tags=["documents"])

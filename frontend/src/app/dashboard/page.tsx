@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { DocumentsTable } from "@/components/DocumentsTable";
 import { AppHeader } from "@/components/AppHeader";
+import { Sidebar } from "@/components/Sidebar";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -53,7 +54,9 @@ export default async function DashboardPage({
         <AppHeader />
       </Suspense>
 
-      <main className="mx-auto max-w-5xl px-6 py-8">
+      <Suspense><Sidebar /></Suspense>
+
+      <main className="mx-auto max-w-5xl px-6 py-8 pl-20">
         <div className="mb-6 flex items-center justify-between">
           <p className="text-sm text-gray-500">{company?.name}</p>
           <Link

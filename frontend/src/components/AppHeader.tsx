@@ -43,16 +43,19 @@ export function AppHeader() {
 
   const [token, setToken] = useState<string | null>(null);
   const [userName, setUserName] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [role, setRole] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [bellOpen, setBellOpen] = useState(false);
+  const [avatarOpen, setAvatarOpen] = useState(false);
   const [inputValue, setInputValue] = useState(searchParams.get("q") ?? "");
   const bellRef = useRef<HTMLDivElement>(null);
+  const avatarRef = useRef<HTMLDivElement>(null);
   const tokenRef = useRef<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Sync input when URL q param changes externally (e.g. browser back/forward)
   useEffect(() => {
     setInputValue(searchParams.get("q") ?? "");
   }, [searchParams]);
@@ -75,14 +78,16 @@ export function AppHeader() {
         user.email?.split("@")[0] ||
         "User";
       setUserName(name);
+      setUserEmail(user.email ?? "");
 
       try {
         const res = await fetch(`${API_URL}/api/v1/companies/me`, {
           headers: { Authorization: `Bearer ${t}` },
         });
         if (res.ok) {
-          const data = (await res.json()) as { role?: string };
+          const data = (await res.json()) as { role?: string; company?: { name?: string } };
           setRole(data.role ?? "");
+          setCompanyName(data.company?.name ?? "");
         }
       } catch {}
     }
@@ -122,6 +127,21 @@ export function AppHeader() {
     return () => document.removeEventListener("mousedown", handle);
   }, [bellOpen]);
 
+  useEffect(() => {
+    if (!avatarOpen) return;
+    function handle(e: MouseEvent) {
+      if (!avatarRef.current?.contains(e.target as Node)) setAvatarOpen(false);
+    }
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [avatarOpen]);
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/");
+  }
+
   async function handleBellClick() {
     if (bellOpen) {
       setBellOpen(false);
@@ -154,13 +174,13 @@ export function AppHeader() {
       } else {
         params.delete("q");
       }
-      // Reset to page 0 on new search
       params.delete("page");
       router.replace(`${target}?${params.toString()}`);
     }, 400);
   }
 
   const initials = userName.charAt(0).toUpperCase();
+  const companyInitial = (companyName || "W").charAt(0).toUpperCase();
 
   return (
     <header className="border-b border-gray-200 bg-white px-6 py-3">
@@ -205,17 +225,13 @@ export function AppHeader() {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Bell */}
           <div ref={bellRef} className="relative">
             <button
               onClick={handleBellClick}
               className="relative flex h-9 w-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100"
             >
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -236,9 +252,7 @@ export function AppHeader() {
                   Notifications
                 </p>
                 {notifications.length === 0 ? (
-                  <p className="px-4 py-6 text-center text-sm text-gray-400">
-                    All caught up
-                  </p>
+                  <p className="px-4 py-6 text-center text-sm text-gray-400">All caught up</p>
                 ) : (
                   <ul className="max-h-72 overflow-y-auto">
                     {notifications.slice(0, 10).map((n, i) => (
@@ -250,13 +264,9 @@ export function AppHeader() {
                           className={`mt-1.5 h-2 w-2 flex-shrink-0 rounded-full ${n.is_unread ? "bg-blue-500" : "bg-gray-300"}`}
                         />
                         <div className="min-w-0 flex-1">
-                          <p className="truncate font-medium text-gray-800">
-                            {n.label}
-                          </p>
+                          <p className="truncate font-medium text-gray-800">{n.label}</p>
                           {n.document_filename && (
-                            <p className="truncate text-xs text-gray-500">
-                              {n.document_filename}
-                            </p>
+                            <p className="truncate text-xs text-gray-500">{n.document_filename}</p>
                           )}
                         </div>
                         <span className="flex-shrink-0 text-xs text-gray-400">
@@ -270,21 +280,182 @@ export function AppHeader() {
             )}
           </div>
 
+          {/* Avatar */}
           {userName && (
-            <div className="flex items-center gap-2.5">
-              <div className="text-right">
-                <p className="text-sm font-medium leading-tight text-gray-800">
-                  {userName}
-                </p>
-                {role && (
-                  <p className="text-xs leading-tight text-gray-400">
-                    {ROLE_LABELS[role] ?? role}
-                  </p>
-                )}
-              </div>
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">
-                {initials}
-              </div>
+            <div ref={avatarRef} className="relative">
+              <button
+                onClick={() => setAvatarOpen((o) => !o)}
+                className="flex items-center gap-2.5 rounded-full p-0.5 transition-all hover:ring-2 hover:ring-blue-200"
+              >
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">
+                  {initials}
+                </div>
+              </button>
+
+              {avatarOpen && (
+                /*
+                 * overflow-hidden is intentionally omitted here so that the
+                 * workspace and help flyouts (positioned right-full) are not
+                 * clipped by the dropdown's box boundary.
+                 */
+                <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-xl border border-gray-200 bg-white shadow-lg">
+
+                  {/* ── Workspace row — flyout on hover ── */}
+                  <div className="group relative">
+                    <div className="flex cursor-default items-center justify-between rounded-t-xl px-4 py-3 hover:bg-gray-50">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-gray-900">
+                          {companyName || "Workspace"}
+                        </p>
+                        <p className="mt-0.5 text-xs capitalize text-gray-400">
+                          {ROLE_LABELS[role] ?? role}
+                        </p>
+                      </div>
+                      <svg className="ml-2 h-3.5 w-3.5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </div>
+
+                    {/* Workspace flyout */}
+                    <div className="invisible absolute right-full top-0 z-50 w-60 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg group-hover:visible">
+                      {/* Email */}
+                      <div className="flex items-center gap-2.5 border-b border-gray-100 px-4 py-3">
+                        <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-gray-100">
+                          <svg className="h-3.5 w-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                        </div>
+                        <span className="truncate text-xs text-gray-500">{userEmail}</span>
+                      </div>
+
+                      <div className="py-1">
+                        {/* Active workspace */}
+                        <div className="flex items-center gap-3 px-4 py-2.5">
+                          <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-blue-600 text-xs font-bold text-white">
+                            {companyInitial}
+                          </div>
+                          <p className="min-w-0 flex-1 truncate text-sm font-medium text-gray-900">
+                            {companyName || "Workspace"}
+                          </p>
+                          <svg className="h-4 w-4 flex-shrink-0 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+
+                        {/* Current user */}
+                        <div className="flex items-center gap-3 px-4 py-2.5">
+                          <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
+                            {initials}
+                          </div>
+                          <p className="truncate text-sm text-gray-700">{userName}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gray-100" />
+
+                  {/* ── Settings & Help ── */}
+                  <div className="py-1">
+                    <button
+                      onClick={() => { setAvatarOpen(false); router.push("/settings"); }}
+                      className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Settings
+                    </button>
+
+                    {/* Help row — flyout on hover */}
+                    <div className="group relative">
+                      <div className="flex w-full cursor-default items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                        <span className="flex items-center gap-2.5">
+                          <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Help
+                        </span>
+                        <svg className="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </div>
+
+                      {/* Help flyout */}
+                      <div className="invisible absolute right-full top-0 z-50 w-52 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg group-hover:visible">
+                        <div className="py-1">
+                          <button
+                            onClick={() => { setAvatarOpen(false); router.push("/help"); }}
+                            className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          >
+                            <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Help center
+                          </button>
+                          <button
+                            onClick={() => setAvatarOpen(false)}
+                            className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          >
+                            <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A2 2 0 013 8V5a2 2 0 012-2z" />
+                            </svg>
+                            Release notes
+                          </button>
+                        </div>
+
+                        <div className="border-t border-gray-100" />
+
+                        <div className="py-1">
+                          <button
+                            onClick={() => setAvatarOpen(false)}
+                            className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          >
+                            <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Terms of Service
+                          </button>
+                          <button
+                            onClick={() => setAvatarOpen(false)}
+                            className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          >
+                            <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Privacy Policy
+                          </button>
+                          <button
+                            onClick={() => { setAvatarOpen(false); window.location.href = "mailto:support@integris.pl"; }}
+                            className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          >
+                            <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            Report a bug
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gray-100" />
+
+                  {/* ── Log out ── */}
+                  <div className="py-1">
+                    <button
+                      onClick={handleLogout}
+                      className="flex w-full items-center gap-2.5 rounded-b-xl px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      Log out
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
