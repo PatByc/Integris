@@ -42,3 +42,4 @@ Desktop.ini
 # Ignore big unnecessary files (>100MB)
 node_modules/
 frontend/node_modules/
+frontend/.next/

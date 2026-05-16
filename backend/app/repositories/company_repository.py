@@ -1,6 +1,7 @@
+from datetime import datetime, timezone
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,12 +22,39 @@ async def get_company(db: AsyncSession, company_id: UUID) -> Company | None:
     return result.scalar_one_or_none()
 
 
-async def create_company(db: AsyncSession, name: str, nip: str) -> Company:
-    company = Company(name=name, nip=nip)
+async def create_company(db: AsyncSession, name: str, nip: str, plan_type: str = "testing") -> Company:
+    company = Company(name=name, nip=nip, plan_type=plan_type)
     db.add(company)
     await db.flush()
     await db.refresh(company)
     return company
+
+
+async def check_upload_limit(db: AsyncSession, company_id: UUID) -> tuple[int, int, bool]:
+    from app.core.plan_limits import PLAN_LIMITS
+    company = await get_company(db, company_id)
+    if company is None:
+        return 0, -1, False
+    now = datetime.now(timezone.utc)
+    reset_at = company.monthly_reset_at
+    if reset_at.tzinfo is None:
+        reset_at = reset_at.replace(tzinfo=timezone.utc)
+    if now.year != reset_at.year or now.month != reset_at.month:
+        company.docs_uploaded_this_month = 0
+        company.monthly_reset_at = now
+        await db.flush()
+    used = company.docs_uploaded_this_month
+    limit = PLAN_LIMITS.get(company.plan_type, 25)
+    is_at_limit = limit != -1 and used >= limit
+    return used, limit, is_at_limit
+
+
+async def increment_upload_count(db: AsyncSession, company_id: UUID) -> None:
+    await db.execute(
+        update(Company)
+        .where(Company.id == company_id)
+        .values(docs_uploaded_this_month=Company.docs_uploaded_this_month + 1)
+    )
 
 
 async def create_membership(

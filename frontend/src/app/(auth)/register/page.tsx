@@ -9,6 +9,8 @@ import { useTranslations } from "next-intl";
 export default function RegisterPage() {
   const t = useTranslations("Auth");
   const router = useRouter();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [agreed, setAgreed] = useState(false);
@@ -26,6 +28,7 @@ export default function RegisterPage() {
         password,
         options: {
           data: {
+            full_name: `${firstName} ${lastName}`.trim(),
             tos_accepted_at: new Date().toISOString(),
             tos_version: "1.0",
           },
@@ -46,6 +49,32 @@ export default function RegisterPage() {
     <>
       <h1 className="mb-6 text-2xl font-bold">{t("createAccountTitle")}</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              {t("firstName")}
+            </label>
+            <input
+              type="text"
+              required
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              {t("lastName")}
+            </label>
+            <input
+              type="text"
+              required
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">
             {t("email")}

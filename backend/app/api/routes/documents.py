@@ -16,6 +16,7 @@ from app.models.company import CompanyMembership
 from app.models.document import AuditEvent
 from app.repositories import invoice_draft_repository, ksef_submission_repository, validation_error_repository, xml_export_repository
 from app.repositories import document_repository as doc_repo
+from app.repositories.company_repository import check_upload_limit, increment_upload_count
 from app.repositories.document_repository import get_by_id, list_by_company
 from app.schemas.document_schema import DocumentListOut, DocumentOut
 from app.schemas.invoice_draft_schema import InvoiceDraftOut, InvoiceDraftUpdate, LineItemOut
@@ -38,6 +39,25 @@ class BentoStatsOut(BaseModel):
     storage_quota_bytes: int
 
 
+class ValidationQueueItemOut(BaseModel):
+    id: UUID
+    filename: str
+    status: str
+    seller_name: str | None
+    confidence: float | None
+    error_count: int
+    first_error_rule: str | None
+    created_at: datetime
+
+
+class ValidationQueueOut(BaseModel):
+    items: list[ValidationQueueItemOut]
+    pending_count: int
+    total_errors: int
+    avg_confidence: float | None
+    error_free_count: int
+
+
 class AuditEventOut(BaseModel):
     event_type: str
     created_at: datetime
@@ -56,15 +76,28 @@ async def upload_document(
     db: AsyncSession = Depends(get_db),
 ) -> DocumentOut:
     await ensure_profile(db, user["user_id"], user["email"])
+    used, limit, is_at_limit = await check_upload_limit(db, membership.company_id)
+    if is_at_limit:
+        raise HTTPException(status_code=403, detail="upload_limit_reached")
     doc = await document_service.upload(
         db,
         company_id=membership.company_id,
         user_id=user["user_id"],
         file=file,
     )
+    await increment_upload_count(db, membership.company_id)
     await db.commit()
     enqueue_ocr_job(doc.id)
     return DocumentOut.model_validate(doc)
+
+
+@router.get("/validation-queue", response_model=ValidationQueueOut)
+async def get_validation_queue(
+    membership: Annotated[CompanyMembership, Depends(get_current_membership)],
+    db: AsyncSession = Depends(get_db),
+) -> ValidationQueueOut:
+    data = await doc_repo.get_validation_queue(db, membership.company_id)
+    return ValidationQueueOut(**data)
 
 
 @router.get("/bento-stats", response_model=BentoStatsOut)

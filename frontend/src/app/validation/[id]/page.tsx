@@ -9,6 +9,7 @@ import { PdfPreview } from "@/components/review/PdfPreview";
 import { InvoiceForm } from "@/components/review/InvoiceForm";
 import { ValidationErrors } from "@/components/review/ValidationErrors";
 import { ApproveButton } from "@/components/review/ApproveButton";
+import { ConfidenceBanner } from "@/components/review/ConfidenceBanner";
 import { useTranslations } from "next-intl";
 
 interface InvoiceDraftOut {
@@ -29,6 +30,8 @@ interface InvoiceDraftOut {
   net_total: string | null;
   vat_total: string | null;
   gross_total: string | null;
+  confidence: number | null;
+  flags: string[] | null;
   line_items: {
     id: string;
     description: string | null;
@@ -57,6 +60,7 @@ export default function ReviewDetailPage() {
   const [draft, setDraft] = useState<InvoiceDraftOut | null>(null);
   const [errors, setErrors] = useState<ValidationErrorOut[]>([]);
   const [role, setRole] = useState<string>("viewer");
+  const [threshold, setThreshold] = useState<number>(80);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -66,11 +70,12 @@ export default function ReviewDetailPage() {
         const [draftData, errorsData, companyData] = await Promise.all([
           apiGet<InvoiceDraftOut>(`/api/v1/documents/${id}/draft`),
           apiGet<ValidationErrorOut[]>(`/api/v1/documents/${id}/validation-errors`),
-          apiGet<{ role: string }>(`/api/v1/companies/me`),
+          apiGet<{ role: string; company: { ocr_confidence_threshold: number } }>(`/api/v1/companies/me`),
         ]);
         setDraft(draftData);
         setErrors(errorsData);
         setRole(companyData.role);
+        setThreshold(companyData.company.ocr_confidence_threshold);
       } catch {
         setLoadError(t("loadError"));
       } finally {
@@ -114,20 +119,23 @@ export default function ReviewDetailPage() {
           <Link href={`/audit/${id}`} className="text-sm text-gray-500 hover:underline">
             {t("history")}
           </Link>
-          <Link href="/review" className="text-sm text-blue-600 hover:underline">
+          <Link href="/validation" className="text-sm text-blue-600 hover:underline">
             {t("backToQueue")}
           </Link>
         </div>
       </div>
 
       <main className="mx-auto flex w-full max-w-7xl flex-1 gap-6 px-6 py-2">
-        {/* Left: PDF */}
         <div className="flex-1 min-h-[600px]">
           <PdfPreview documentId={id} />
         </div>
 
-        {/* Right: form + errors + approve */}
         <div className="w-[480px] flex-shrink-0 space-y-4 overflow-y-auto">
+          <ConfidenceBanner
+            confidence={draft.confidence}
+            flags={draft.flags}
+            threshold={threshold}
+          />
           <ValidationErrors errors={errors} />
 
           <div className="rounded-lg border border-gray-200 bg-white p-4">

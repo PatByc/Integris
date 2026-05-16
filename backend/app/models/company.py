@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import TIMESTAMP, CheckConstraint, ForeignKey, Index, String, UniqueConstraint, text
+from sqlalchemy import TIMESTAMP, CheckConstraint, ForeignKey, Index, Integer, SmallInteger, String, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -15,6 +15,10 @@ class Company(Base):
     id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String, nullable=False)
     nip: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    ocr_confidence_threshold: Mapped[int] = mapped_column(SmallInteger, nullable=False, server_default=text("80"))
+    plan_type: Mapped[str] = mapped_column(String, nullable=False, server_default=text("'testing'"))
+    docs_uploaded_this_month: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    monthly_reset_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=False, server_default=text("NOW()"))
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=False, server_default=text("NOW()"))
     updated_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=False, server_default=text("NOW()"))
 

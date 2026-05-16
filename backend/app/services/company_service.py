@@ -23,6 +23,7 @@ async def create_company_for_user(
     email: str,
     name: str,
     nip: str,
+    plan_type: str = "testing",
 ) -> tuple[Company, CompanyMembership]:
     existing = await get_user_membership(db, user_id)
     if existing is not None:
@@ -31,7 +32,7 @@ async def create_company_for_user(
     await upsert_profile(db, user_id, email)
 
     try:
-        company = await create_company(db, name=name, nip=nip)
+        company = await create_company(db, name=name, nip=nip, plan_type=plan_type)
     except IntegrityError:
         await db.rollback()
         raise HTTPException(status_code=409, detail="A company with this NIP already exists")

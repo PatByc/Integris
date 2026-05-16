@@ -120,7 +120,7 @@ export default async function AuditPage({
             <p className="font-mono text-xs text-gray-400">{id}</p>
           </div>
           <Link
-            href={`/review/${id}`}
+            href={`/validation/${id}`}
             className="text-sm text-blue-600 hover:underline whitespace-nowrap"
           >
             {t("backToReview")}

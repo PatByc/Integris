@@ -12,6 +12,7 @@ export default function CompanySetupPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [nip, setNip] = useState("");
+  const [planType, setPlanType] = useState("testing");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +21,7 @@ export default function CompanySetupPage() {
     setError(null);
     setLoading(true);
     try {
-      await apiPost("/api/v1/companies", { name, nip });
+      await apiPost("/api/v1/companies", { name, nip, plan_type: planType });
       router.push("/dashboard");
       router.refresh();
     } catch (err) {
@@ -67,6 +68,39 @@ export default function CompanySetupPage() {
             <p className="mt-1 text-xs text-gray-500">
               {t("nipHint")}
             </p>
+          </div>
+          <div>
+            <p className="mb-2 text-sm font-medium text-gray-700">{t("choosePlan")}</p>
+            <div className="space-y-2">
+              {([
+                ["testing",    t("planTestingLabel"),    t("planTestingDesc")],
+                ["starter",    t("planStarterLabel"),    t("planStarterDesc")],
+                ["growth",     t("planGrowthLabel"),     t("planGrowthDesc")],
+                ["enterprise", t("planEnterpriseLabel"), t("planEnterpriseDesc")],
+              ] as [string, string, string][]).map(([value, label, desc]) => (
+                <label
+                  key={value}
+                  className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
+                    planType === value
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="plan"
+                    value={value}
+                    checked={planType === value}
+                    onChange={() => setPlanType(value)}
+                    className="mt-0.5 h-4 w-4 flex-shrink-0 accent-blue-600"
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{label}</p>
+                    <p className="text-xs text-gray-500">{desc}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button

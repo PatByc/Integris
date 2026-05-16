@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { getTranslations } from "next-intl/server";
+import { OcrSensitivitySection } from "@/components/OcrSensitivitySection";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -19,7 +20,7 @@ export default async function OrganizationPage() {
   if (res.status === 404) redirect("/company/setup");
 
   const { company, role } = (await res.json()) as {
-    company: { id: string; name: string; nip: string; created_at: string };
+    company: { id: string; name: string; nip: string; created_at: string; ocr_confidence_threshold: number };
     role: string;
   };
 
@@ -57,6 +58,12 @@ export default async function OrganizationPage() {
           </div>
         </dl>
       </section>
+
+      <OcrSensitivitySection
+        initialThreshold={company.ocr_confidence_threshold}
+        token={session!.access_token}
+        isOwner={role === "owner"}
+      />
 
       <section className="rounded-xl border border-gray-200 bg-white p-6">
         <div className="mb-4 flex items-center justify-between">

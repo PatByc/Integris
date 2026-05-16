@@ -43,6 +43,7 @@ export function AppHeader() {
   const [userEmail, setUserEmail] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [role, setRole] = useState("");
+  const [planType, setPlanType] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [bellOpen, setBellOpen] = useState(false);
@@ -82,9 +83,13 @@ export function AppHeader() {
           headers: { Authorization: `Bearer ${tok}` },
         });
         if (res.ok) {
-          const data = (await res.json()) as { role?: string; company?: { name?: string } };
+          const data = (await res.json()) as {
+            role?: string;
+            company?: { name?: string; plan_type?: string };
+          };
           setRole(data.role ?? "");
           setCompanyName(data.company?.name ?? "");
+          setPlanType(data.company?.plan_type ?? "testing");
         }
       } catch {}
     }
@@ -190,7 +195,7 @@ export function AppHeader() {
   const tSimple = t as (key: string, values?: Record<string, unknown>) => string;
 
   return (
-    <header className="border-b border-gray-200 bg-white px-6 py-3">
+    <header className="sticky top-0 z-10 border-b border-gray-200 bg-white px-6 py-3">
       <div className="mx-auto flex max-w-7xl items-center gap-4">
         <Link href="/dashboard" className="flex-shrink-0">
           <Image src={logo} alt="Integris" height={56} className="h-14 w-auto" />
@@ -291,10 +296,21 @@ export function AppHeader() {
             <div ref={avatarRef} className="relative">
               <button
                 onClick={() => setAvatarOpen((o) => !o)}
-                className="flex items-center gap-2.5 rounded-full p-0.5 transition-all hover:ring-2 hover:ring-blue-200"
+                className="flex items-center gap-2 rounded-lg px-2 py-1 transition-all hover:bg-gray-100"
               >
                 <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">
                   {initials}
+                </div>
+                <div className="flex flex-col items-start leading-tight">
+                  <span className="text-sm font-medium text-gray-900">{userName}</span>
+                  {planType && (
+                    <span className={`text-[10px] font-semibold uppercase tracking-wide ${
+                      planType === "starter" ? "text-amber-600" :
+                      planType === "growth" ? "text-blue-600" :
+                      planType === "enterprise" ? "text-purple-600" :
+                      "text-gray-400"
+                    }`}>{planType}</span>
+                  )}
                 </div>
               </button>
 
@@ -304,7 +320,7 @@ export function AppHeader() {
                  * workspace and help flyouts (positioned right-full) are not
                  * clipped by the dropdown's box boundary.
                  */
-                <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-xl border border-gray-200 bg-white shadow-lg">
+                <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-gray-200 bg-white shadow-lg">
 
                   {/* ── Workspace row — flyout on hover ── */}
                   <div className="group relative">
@@ -314,7 +330,7 @@ export function AppHeader() {
                           {companyName || "Workspace"}
                         </p>
                         <p className="mt-0.5 text-xs capitalize text-gray-400">
-                          {roleLabel(role)}
+                          {roleLabel(role)}{planType ? ` · ${planType}` : ""}
                         </p>
                       </div>
                       <svg className="ml-2 h-3.5 w-3.5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -363,6 +379,17 @@ export function AppHeader() {
 
                   {/* ── Settings & Help ── */}
                   <div className="py-1">
+                    {planType && planType !== "enterprise" && (
+                      <button
+                        onClick={() => { setAvatarOpen(false); router.push("/pricing"); }}
+                        className="flex w-full items-center gap-2.5 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                        </svg>
+                        {t("upgradePlan")}
+                      </button>
+                    )}
                     <button
                       onClick={() => { setAvatarOpen(false); router.push("/settings"); }}
                       className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
@@ -444,6 +471,21 @@ export function AppHeader() {
                         </div>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="border-t border-gray-100" />
+
+                  {/* ── Security & Governance ── */}
+                  <div className="py-1">
+                    <button
+                      onClick={() => { setAvatarOpen(false); router.push("/security"); }}
+                      className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                      Security &amp; Governance
+                    </button>
                   </div>
 
                   <div className="border-t border-gray-100" />

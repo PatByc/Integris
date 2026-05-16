@@ -480,7 +480,7 @@ export function DocumentsTable({ token, initialDocuments, initialTotal }: Props)
                         )}
                         {(doc.status === "needs_review" || doc.status === "validation_failed") && (
                           <Link
-                            href={`/review/${doc.id}`}
+                            href={`/validation/${doc.id}`}
                             className="rounded bg-purple-600 px-3 py-1 text-center text-xs font-medium text-white hover:bg-purple-700"
                           >
                             {t("review")}

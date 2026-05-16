@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import landingLogo from "@/landing-logo.png";
 import { SignInButton } from "@/components/SignInButton";
+import { LandingNav } from "@/components/LandingNav";
 import { getTranslations } from "next-intl/server";
 
 export default async function LandingPage() {
@@ -9,20 +10,14 @@ export default async function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Nav */}
-      <nav className="flex items-center justify-end px-8 py-5">
-        <SignInButton
-          className="text-sm font-medium text-gray-600 hover:text-gray-900"
-          label={t("logInNav")}
-        />
-      </nav>
+      <LandingNav />
 
       {/* Hero */}
       <section className="flex flex-col items-center px-10 pb-28 pt-10 text-center">
         <Image
           src={landingLogo}
           alt="Integris — Inteligentna infrastruktura KSeF dla systemów ERP"
-          className="mb-14 h-100 w-auto"
+          className="mb-14 h-80 w-auto"
           priority
         />
 

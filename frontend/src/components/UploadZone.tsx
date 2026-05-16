@@ -27,7 +27,11 @@ export function UploadZone() {
         router.push("/dashboard");
         router.refresh();
       } catch (err) {
-        setError(err instanceof ApiError ? err.message : t("uploadFailed"));
+        if (err instanceof ApiError && err.message === "upload_limit_reached") {
+          setError(t("uploadLimitReached"));
+        } else {
+          setError(err instanceof ApiError ? err.message : t("uploadFailed"));
+        }
       } finally {
         setUploading(false);
       }

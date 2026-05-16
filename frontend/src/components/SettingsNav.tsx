@@ -13,6 +13,7 @@ export function SettingsNav() {
     { label: t("account"), href: "/settings/account" },
     { label: t("organizationProfile"), href: "/settings/organization" },
     { label: t("apiCredentials"), href: "/settings/api-page" },
+    { label: t("usage"), href: "/settings/usage" },
   ];
 
   return (

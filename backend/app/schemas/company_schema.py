@@ -17,24 +17,48 @@ def _validate_nip(nip: str) -> str:
 class CompanyCreate(BaseModel):
     name: str
     nip: str
+    plan_type: str = "testing"
 
     @field_validator("nip")
     @classmethod
     def validate_nip(cls, v: str) -> str:
         return _validate_nip(v)
 
+    @field_validator("plan_type")
+    @classmethod
+    def validate_plan_type(cls, v: str) -> str:
+        if v not in {"testing", "starter", "growth", "enterprise"}:
+            raise ValueError("Invalid plan_type")
+        return v
+
 
 class CompanyOut(BaseModel):
     id: UUID
     name: str
     nip: str
+    ocr_confidence_threshold: int
+    plan_type: str
+    docs_uploaded_this_month: int
+    monthly_reset_at: datetime
     created_at: datetime
 
     model_config = {"from_attributes": True}
 
 
+class CompanySettingsUpdate(BaseModel):
+    ocr_confidence_threshold: int
+
+    @field_validator("ocr_confidence_threshold")
+    @classmethod
+    def validate_threshold(cls, v: int) -> int:
+        if not (0 <= v <= 100):
+            raise ValueError("Threshold must be 0–100")
+        return v
+
+
 class MembershipOut(BaseModel):
     company: CompanyOut
     role: str
+    monthly_limit: int = -1
 
     model_config = {"from_attributes": True}

@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.document import Document
 from app.models.invoice_draft import InvoiceDraft
+from app.models.validation_error import ValidationError
 
 
 async def create(
@@ -107,6 +108,65 @@ async def get_bento_stats(db: AsyncSession, company_id: UUID) -> dict:
         "docs_per_day": docs_per_day,
         "status_breakdown": status_breakdown,
         "storage_bytes": storage_bytes,
+    }
+
+
+async def get_validation_queue(db: AsyncSession, company_id: UUID) -> dict:
+    QUEUE_STATUSES = ("needs_review", "validation_failed")
+
+    # Correlated subquery: first error rule_name per document (oldest first)
+    first_error_sq = (
+        select(ValidationError.rule_name)
+        .where(ValidationError.document_id == Document.id)
+        .order_by(ValidationError.created_at)
+        .limit(1)
+        .correlate(Document)
+        .scalar_subquery()
+    )
+
+    rows = await db.execute(
+        select(
+            Document.id,
+            Document.filename,
+            Document.status,
+            Document.created_at,
+            InvoiceDraft.seller_name,
+            InvoiceDraft.confidence,
+            func.count(ValidationError.id).label("error_count"),
+            first_error_sq.label("first_error_rule"),
+        )
+        .select_from(Document)
+        .outerjoin(InvoiceDraft, InvoiceDraft.document_id == Document.id)
+        .outerjoin(ValidationError, ValidationError.document_id == Document.id)
+        .where(Document.company_id == company_id, Document.status.in_(QUEUE_STATUSES))
+        .group_by(Document.id, InvoiceDraft.seller_name, InvoiceDraft.confidence, first_error_sq)
+        .order_by(Document.created_at.desc())
+    )
+    items = rows.all()
+
+    total_errors = sum(r.error_count for r in items)
+    confidences = [float(r.confidence) for r in items if r.confidence is not None]
+    avg_confidence = round(sum(confidences) / len(confidences), 4) if confidences else None
+    error_free_count = sum(1 for r in items if r.error_count == 0)
+
+    return {
+        "items": [
+            {
+                "id": r.id,
+                "filename": r.filename,
+                "status": r.status,
+                "seller_name": r.seller_name,
+                "confidence": float(r.confidence) if r.confidence is not None else None,
+                "error_count": r.error_count,
+                "first_error_rule": r.first_error_rule,
+                "created_at": r.created_at,
+            }
+            for r in items
+        ],
+        "pending_count": len(items),
+        "total_errors": total_errors,
+        "avg_confidence": avg_confidence,
+        "error_free_count": error_free_count,
     }
 
 

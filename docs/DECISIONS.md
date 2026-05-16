@@ -328,3 +328,81 @@ Documented in `workers/base_worker.py` docstring.
 Tradeoffs: None for MVP scale. At high load, a single slow company could delay others in the queue. Fair-queue scheduling is post-MVP.
 
 Follow-up: If one company generates disproportionate volume, a per-company queue routing strategy can be added to `BaseWorker` without changing the worker logic.
+
+---
+
+## DEC-020: Marketing landing pages — Pricing, About, Security with shared nav
+
+Date: 2026-05-16
+Status: accepted
+
+Decision: Added three public landing pages (`/pricing`, `/about`, `/security`) with a shared `LandingNav` client component. Nav shows the Integris logo (same `logo.png` as the app) left-aligned and three centered links (Pricing / About / Security) via `absolute left-1/2 -translate-x-1/2` positioning. No login link in the nav — kept clean for marketing.
+
+`/security` was already present but rebuilt: switched from `AppHeader` (authenticated) to `LandingNav` (public), and all text extracted into translations.
+
+Reason: The app had no public-facing content to support sales, pricing clarity, or regulatory trust-building. `/security` also needed a nav consistent with other landing pages.
+
+Tradeoffs: `LandingNav` is a client component (uses `usePathname` for active-link highlighting). Logo image uses Next.js `<Image>` with static import.
+
+Follow-up: None. All three pages are fully translatable (pl/en).
+
+---
+
+## DEC-021: AppHeader — sticky positioning + Security & Governance placement
+
+Date: 2026-05-16
+Status: accepted
+
+Decision:
+1. `AppHeader` is now `sticky top-0 z-10` — follows the viewport when scrolling.
+2. Security & Governance button moved from inside the Help flyout (where it was unreachable) to its own section in the main avatar dropdown, between Help and Log out.
+
+Reason: The header scrolling away made navigation inaccessible on long document lists. The Security & Governance button was functionally hidden inside a nested hover flyout.
+
+Tradeoffs: None.
+
+Follow-up: None.
+
+---
+
+## DEC-022: Landing page i18n — Pricing, About, Security namespaces
+
+Date: 2026-05-16
+Status: accepted
+
+Decision: All text on `/pricing`, `/about`, and `/security` is now in `messages/en.json` and `messages/pl.json` under the `Pricing`, `About`, and `Security` namespaces respectively. Pages use `getTranslations()` (server components). Arrays (feature lists, bullets, principles) use `t.raw("key") as TypedArray`. JSX icons stay in the component — they cannot go in JSON. Footer strings reuse the existing `Landing.*` keys via a second `getTranslations("Landing")` call.
+
+Reason: Landing pages had all content hardcoded in English (or mixed Polish/English for Security). Polish users and the locale switcher couldn't affect them.
+
+Tradeoffs: Price numbers (499, 2499) are kept hardcoded in the component — only surrounding text is translated.
+
+Follow-up: None. Both locales have complete translations.
+
+---
+
+## DEC-023: Pricing plan integration — plan tracking, usage limits, upgrade UX
+
+Date: 2026-05-16
+Status: accepted
+
+Decision: Wired the four pricing tiers (testing / starter / growth / enterprise) into the application with no payment processing — plans are assigned manually and enforced in-app.
+
+**DB changes (migration 005):** `Company` table gains `plan_type` (string, default `testing`), `docs_uploaded_this_month` (int, default 0), `monthly_reset_at` (timestamp). Limits: testing=25, starter=200, growth=1000, enterprise=unlimited (−1), defined in `backend/app/core/plan_limits.py`.
+
+**Usage unit:** documents uploaded. Counter increments atomically in `company_repository.increment_upload_count()` after a successful document row insert. Monthly reset is automatic: `check_upload_limit()` compares current month to `monthly_reset_at` and resets the counter if the month has rolled over.
+
+**Enforcement:** `POST /api/v1/documents/upload` calls `check_upload_limit()` before creating the document. At limit → HTTP 403 with `detail: "upload_limit_reached"`. Frontend `UploadZone` detects this exact string and shows a localized "limit reached" error with a link to Settings → Usage.
+
+**Plan selection:** Added to `/company/setup` as a radio card picker (4 options, default testing). Sent as `plan_type` in `POST /api/v1/companies` body.
+
+**AppHeader:** Avatar button now shows full name + plan tier badge (gray/amber/blue/purple). Dropdown workspace row shows `role · plan`. "Upgrade plan" item (arrow-up icon, blue text) appears above Settings for non-enterprise users.
+
+**Registration:** Added first name + last name fields. Stored as `full_name` in Supabase `user_metadata` on signup — displayed as the user's name throughout the app.
+
+**Settings → Usage (new page):** Shows current plan card, monthly usage progress bar (amber at 70%, red at 90%), plan ladder, and upgrade CTA. Data from `GET /api/v1/companies/me` which now returns `plan_type`, `docs_uploaded_this_month`, `monthly_reset_at`, and computed `monthly_limit`.
+
+Reason: The pricing page existed as a marketing page only. No limits were enforced, no plan was stored, and the header showed no identity context.
+
+Tradeoffs: No payment processing — plan upgrades require manual reassignment by an operator. Counter uses an `UPDATE ... SET docs_uploaded_this_month = docs_uploaded_this_month + 1` (atomic at the DB level) but is not row-locked with the document insert (acceptable for MVP; users won't hit the race condition at small scale).
+
+Follow-up: When payment processing is added (Stripe or Przelewy24), plan_type is updated via webhook on subscription event. The rest of the enforcement logic stays unchanged.

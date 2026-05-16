@@ -19,12 +19,14 @@ interface BentoStats {
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const STATUS_GROUPS = [
-  { label: "Processing",      statuses: ["ocr_processing", "extraction_processing"], color: "bg-blue-400" },
-  { label: "Needs Review",    statuses: ["needs_review"],                             color: "bg-amber-400" },
-  { label: "Ready to Submit", statuses: ["approved", "xml_generated"],               color: "bg-indigo-400" },
-  { label: "Submitted",       statuses: ["submission_pending", "submitted"],          color: "bg-purple-400" },
-  { label: "Accepted",        statuses: ["accepted"],                                 color: "bg-green-500" },
-  { label: "Failed",          statuses: ["ocr_failed", "extraction_failed", "rejected", "cancelled"], color: "bg-red-400" },
+  { label: "Uploaded",        statuses: ["uploaded"],                                                  color: "bg-gray-300" },
+  { label: "Processing",      statuses: ["ocr_processing", "extraction_processing"],                   color: "bg-blue-400" },
+  { label: "Needs Review",    statuses: ["needs_review", "validation_failed"],                         color: "bg-amber-400" },
+  { label: "Approved",        statuses: ["approved"],                                                  color: "bg-indigo-400" },
+  { label: "XML Generated",   statuses: ["xml_generated"],                                             color: "bg-indigo-600" },
+  { label: "Submitted",       statuses: ["submission_pending", "submitted"],                           color: "bg-purple-400" },
+  { label: "Accepted",        statuses: ["accepted"],                                                  color: "bg-green-500" },
+  { label: "Failed",          statuses: ["ocr_failed", "extraction_failed", "rejected", "cancelled"],  color: "bg-red-400" },
 ];
 
 function formatBytes(bytes: number): string {
@@ -55,6 +57,7 @@ export function BentoSection({ token }: { token: string }) {
 
   const { docs_per_day, status_breakdown, storage_bytes } = stats;
   const maxCount = Math.max(...docs_per_day.map((d) => d.count), 1);
+  const BAR_HEIGHT_PX = 96; // matches h-24 container
   const totalDocs = Object.values(status_breakdown).reduce((a, b) => a + b, 0);
 
   const pipelineRows = STATUS_GROUPS.map((g) => ({
@@ -71,13 +74,16 @@ export function BentoSection({ token }: { token: string }) {
         </p>
         <div className="flex h-24 items-end gap-1.5">
           {docs_per_day.map(({ date, count }) => {
-            const pct = Math.max(Math.round((count / maxCount) * 100), count > 0 ? 8 : 3);
+            const heightPx = Math.max(
+              Math.round((count / maxCount) * BAR_HEIGHT_PX),
+              count > 0 ? 8 : 3,
+            );
             return (
               <div key={date} className="flex flex-1 flex-col items-center">
                 <div
                   className="w-full rounded-sm transition-all"
                   style={{
-                    height: `${pct}%`,
+                    height: `${heightPx}px`,
                     backgroundColor: count > 0 ? "#2563eb" : "#e5e7eb",
                   }}
                   title={`${count} document${count !== 1 ? "s" : ""}`}

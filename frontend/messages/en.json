@@ -1,19 +1,24 @@
 {
+  "LandingNav": {
+    "pricing": "Pricing",
+    "about": "About",
+    "security": "Security"
+  },
   "Landing": {
     "logInNav": "Log in →",
     "logInButton": "Log in",
     "alreadyHaveAccount": "Already have an account?",
     "newHere": "New here?",
     "getStartedFree": "Get started free",
-    "heroTitle": "Turn PDF invoices into KSeF-ready XML — automatically",
-    "heroSubtitle": "Connect your existing invoice workflow to KSeF without replacing your ERP. OCR extraction, human review, and one-click submission.",
+    "heroTitle": "KSeF workflow automation for legacy ERP systems",
+    "heroSubtitle": "Extract invoice data, validate workflows and submit compliant XML to KSeF — without replacing your existing ERP.",
     "feature1Title": "OCR + AI Extraction",
     "feature1Body": "Upload any PDF invoice. Google Vision OCR reads the text, AI normalises it into structured invoice fields — seller, buyer, line items, totals.",
     "feature2Title": "Human Review",
     "feature2Body": "Every invoice goes through a side-by-side review screen. Correct any extraction errors before the data leaves your hands — AI assists, humans approve.",
     "feature3Title": "KSeF Submission",
     "feature3Body": "Approved invoices are converted to FA(3) XML deterministically and submitted directly to KSeF. Full audit trail and UPO confirmation included.",
-    "footer": "© 2025 Integris · KSeF invoice middleware",
+    "footer": "© 2026 Integris · KSeF invoice middleware",
     "termsLink": "Terms of Service",
     "privacyLink": "Privacy & Cookie Policy"
   },
@@ -26,6 +31,8 @@
     "signInTitle": "Sign in to Integris",
     "email": "Email",
     "password": "Password",
+    "firstName": "First name",
+    "lastName": "Last name",
     "signIn": "Sign in",
     "signingIn": "Signing in…",
     "noAccount": "Don't have an account?",
@@ -39,6 +46,15 @@
     "companyName": "Company name",
     "nip": "NIP",
     "nipHint": "10-digit Polish tax identifier",
+    "choosePlan": "Choose your plan",
+    "planTestingLabel": "Testing",
+    "planTestingDesc": "Free · MVP phase · 25 documents/month",
+    "planStarterLabel": "Starter",
+    "planStarterDesc": "499 PLN/month · 200 documents/month",
+    "planGrowthLabel": "Growth",
+    "planGrowthDesc": "2,499 PLN/month · 1,000 documents/month",
+    "planEnterpriseLabel": "Enterprise",
+    "planEnterpriseDesc": "Custom pricing · unlimited",
     "creating": "Creating…",
     "createCompany": "Create company",
     "somethingWentWrong": "Something went wrong",
@@ -72,6 +88,8 @@
     "roleAdmin": "Administrator",
     "roleMember": "Member",
     "roleViewer": "Viewer",
+    "usage": "Usage",
+    "upgradePlan": "Upgrade plan",
     "justNow": "just now",
     "minutesAgo": "{m}m ago",
     "hoursAgo": "{h}h ago"
@@ -88,7 +106,8 @@
     "uploading": "Uploading…",
     "onlyPdf": "Only PDF files are accepted.",
     "fileTooLarge": "File exceeds the 25 MB limit.",
-    "uploadFailed": "Upload failed."
+    "uploadFailed": "Upload failed.",
+    "uploadLimitReached": "Monthly upload limit reached. Visit Settings → Usage to upgrade your plan."
   },
   "DocumentsTable": {
     "noInvoices": "No invoices yet.",
@@ -326,6 +345,175 @@
     "show": "Show",
     "hide": "Hide",
     "aiProviderApiKeys": "AI Provider API Keys",
-    "apiKeysDesc": "Keys are stored server-side as environment variables and scoped to your organisation."
+    "apiKeysDesc": "Keys are stored server-side as environment variables and scoped to your organisation.",
+    "usageTitle": "Usage & Plan",
+    "currentPlan": "Current plan",
+    "monthlyUsage": "Monthly usage",
+    "docsUsed": "{used} / {limit} documents",
+    "docsUsedUnlimited": "{used} documents (unlimited)",
+    "resetsOn": "Resets on",
+    "upgradeNotice": "Upgrade your plan to increase your document limit.",
+    "planTesting": "Testing",
+    "planStarter": "Starter",
+    "planGrowth": "Growth",
+    "planEnterprise": "Enterprise",
+    "planDescTesting": "MVP testing tier · 25 documents/month · no SLA",
+    "planDescStarter": "Small businesses · 200 documents/month",
+    "planDescGrowth": "Growing teams · 1,000 documents/month",
+    "planDescEnterprise": "Custom volume · SLA · Dedicated support",
+    "contactSales": "Contact sales@integris.pl to adjust your plan.",
+    "availablePlans": "Available plans",
+    "upgradePlan": "Upgrade plan"
+  },
+  "Pricing": {
+    "hero": {
+      "badge": "Pricing",
+      "title": "Operational infrastructure — not invoice software",
+      "subtitle": "Integris is KSeF compliance middleware for companies that cannot, or choose not to, replace their ERP. Pricing reflects the operational value delivered — reduced manual work, fewer errors, and seamless KSeF compliance.",
+      "note": "Currently in onboarding phase — early adopter pricing applies."
+    },
+    "testing": {
+      "label": "Testing",
+      "tempBadge": "Temporary · MVP phase",
+      "description": "Available during the MVP stage only. Heavily limited — intended for evaluating the product before formal onboarding. No SLA, no production guarantees.",
+      "features": ["KSeF submission (dry-run)", "PDF ingestion", "OCR + AI extraction", "Basic validation", "Audit logs", "1 user", "Up to 10 invoices/month"],
+      "price": "Free",
+      "priceNote": "During MVP phase only",
+      "cta": "Request access →"
+    },
+    "starter": {
+      "label": "Starter",
+      "target": "Small businesses & Excel workflows",
+      "regularPrice": "1 000 PLN / month",
+      "unit": "PLN / mo",
+      "badge": "Early adopter pricing",
+      "limit": "Up to 50 invoices / month · Fair usage policy applies",
+      "features": ["KSeF submission", "PDF invoice ingestion", "OCR + AI extraction", "FA(3) XML generation", "Basic validation", "Audit logs", "Basic dashboard", "Email support"],
+      "cta": "Get started →"
+    },
+    "growth": {
+      "label": "Growth",
+      "popular": "Most popular",
+      "target": "Growing SMBs & semi-manual accounting teams",
+      "regularPrice": "5 000 PLN / month",
+      "unit": "PLN / mo",
+      "badge": "Early adopter pricing",
+      "limit": "Up to 300 invoices / month · Fair usage policy applies",
+      "featuresHeader": "Everything in Starter, plus:",
+      "features": ["Advanced validation rules", "Workflow automation", "Approval flows", "Multi-user access & role permissions", "API access", "ERP integrations", "Anomaly detection", "Priority support"],
+      "cta": "Get started →"
+    },
+    "enterprise": {
+      "label": "Enterprise",
+      "target": "Mid-market & legacy ERP environments",
+      "customPrice": "Custom",
+      "pricing": "pricing",
+      "pricingNote": "Custom volume · SLA · Dedicated support",
+      "features": ["Custom ERP integrations", "SLA guarantee", "Dedicated onboarding", "Advanced audit trails", "Custom workflow orchestration", "Security review support", "On-prem / private deployment options", "Advanced reporting", "Custom automation logic", "Dedicated account support"],
+      "cta": "Talk to us →"
+    },
+    "roi": [
+      {
+        "title": "Reduced manual labor",
+        "body": "Automate invoice ingestion, extraction, and KSeF submission — freeing up accounting time for higher-value work."
+      },
+      {
+        "title": "Fewer operational errors",
+        "body": "Structured validation and human review before every KSeF submission eliminates manual data entry mistakes."
+      },
+      {
+        "title": "KSeF compliance — no ERP migration",
+        "body": "Connect your existing ERP or accounting system to KSeF without a costly platform replacement."
+      }
+    ],
+    "finePrint": "All plans are subject to a fair usage policy. Invoice limits reflect monthly processing capacity — additional volume available on request. One-time onboarding and setup fees may apply separately and are quoted individually. Enterprise pricing is always custom and negotiated based on volume, integration complexity, and SLA requirements.",
+    "contactLabel": "Questions about pricing?"
+  },
+  "About": {
+    "hero": {
+      "badge": "About",
+      "title": "KSeF is mandatory. Your ERP isn't going anywhere.",
+      "subtitle": "Integris exists because Polish companies are facing a compliance deadline — and most of them cannot, or should not, replace their entire ERP to meet it. We built the bridge instead."
+    },
+    "problem": {
+      "regulationLabel": "The regulation",
+      "regulationBody": "KSeF — Krajowy System e-Faktur — requires all Polish VAT-registered companies to issue structured electronic invoices through the national platform. Non-compliance is not an option. The format, submission process, and validation rules are defined by the Ministry of Finance.",
+      "realityLabel": "The reality",
+      "realityBody": "Most companies run legacy ERP systems, Excel workflows, or accounting software that was never designed to speak KSeF. A full platform migration is expensive, disruptive, and frequently unnecessary. The existing system works — it just needs a compliant output layer."
+    },
+    "what": {
+      "body": "Integris is a middleware layer that sits between your existing invoice workflow and KSeF. It ingests PDF invoices, extracts structured data using OCR and AI, validates it, routes it through human review, generates compliant FA(3) XML deterministically, and submits it to KSeF — without touching your ERP."
+    },
+    "principles": {
+      "sectionLabel": "How we build it",
+      "items": [
+        {
+          "title": "Human-in-the-loop",
+          "body": "AI extracts, humans approve. No invoice reaches KSeF without an operator reviewing and signing off on the data. AI assists — it never decides."
+        },
+        {
+          "title": "Deterministic output",
+          "body": "FA(3) XML is generated by a rule-based algorithm from approved structured data. AI is never used for the final XML — compliance output is always predictable and auditable."
+        },
+        {
+          "title": "Full auditability",
+          "body": "Every upload, correction, approval, and submission is recorded in an immutable audit trail. The system is transparent by design — not as an afterthought."
+        },
+        {
+          "title": "Strict data isolation",
+          "body": "Every document belongs to exactly one company. Multi-tenant isolation is enforced at the architecture level — not by convention or policy."
+        }
+      ]
+    },
+    "future": {
+      "label": "Where we're going",
+      "body": "KSeF compliance is the entry point. The longer opportunity is operational orchestration — connecting legacy accounting workflows to modern, AI-assisted infrastructure. The architecture is built to grow in that direction without ever compromising the core principle:",
+      "highlight": "AI assists, humans decide, and every action is auditable."
+    },
+    "cta": {
+      "title": "Ready to connect your invoices to KSeF?",
+      "subtitle": "No ERP migration required. Start processing invoices in minutes.",
+      "getStarted": "Get started free",
+      "seePricing": "See pricing"
+    }
+  },
+  "Security": {
+    "hero": {
+      "title": "AI Governance & Regulatory Readiness",
+      "subtitle": "Integris is designed for transparent AI workflows, user control, and the auditability required by modern enterprise environments and evolving EU AI regulations, including the AI Act."
+    },
+    "sections": [
+      {
+        "title": "Human-in-the-loop workflows",
+        "body": "Integris does not perform autonomous accounting operations without user oversight.",
+        "bullets": ["Data confirmed before further processing", "Every document reviewed by an operator", "Explicit approval required before KSeF submission", "Full operational control on the user side"]
+      },
+      {
+        "title": "Audit logs & operation history",
+        "body": "Every system operation is recorded and verifiable at any time.",
+        "bullets": ["Full audit trails for every document", "Change history attributed to each user", "Monitoring of all workflow stages", "Enterprise-grade operational transparency"]
+      },
+      {
+        "title": "AI-assisted workflows",
+        "body": "AI in Integris supports data extraction and validation. The system does not make autonomous business or accounting decisions without user involvement.",
+        "bullets": ["AI used exclusively for data extraction and normalisation", "Every AI result requires human verification", "Deterministic XML generation — no AI involved", "Confidence score visible to the operator for each document"]
+      },
+      {
+        "title": "Data security",
+        "body": "Integris uses modern security mechanisms at every stage of document processing.",
+        "bullets": ["End-to-end communication encryption (TLS)", "Role-based access control (owner / operator / viewer)", "Data separation between organisations (multi-tenant)", "Secure PDF document storage in isolated storage"]
+      },
+      {
+        "title": "Enterprise compliance readiness",
+        "body": "The Integris architecture is designed with enterprise environments and regulatory requirements in mind.",
+        "bullets": ["Fully auditable and repeatable workflows", "Compliance with KSeF requirements (Polish e-invoice)", "Operational transparency required by regulated environments", "Designed to modern AI governance standards"]
+      },
+      {
+        "title": "Transparent AI operations",
+        "body": "AI workflows in Integris are designed so that users have full visibility and control at every stage.",
+        "bullets": ["Extraction result visible before approval", "Every field can be corrected before submission", "Confidence score and validation flags available to the operator", "No operation is hidden from the user"]
+      }
+    ],
+    "footer": "The Integris architecture is designed for control, security, and enterprise governance — not as a declaration, but as a system property."
   }
 }
