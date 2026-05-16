@@ -1,15 +1,11 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { getTranslations } from "next-intl/server";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-const ROLE_LABELS: Record<string, string> = {
-  admin: "Administrator",
-  member: "Member",
-  viewer: "Viewer",
-};
-
 export default async function OrganizationPage() {
+  const t = await getTranslations("Settings");
   const supabase = await createSupabaseServerClient();
   const {
     data: { session },
@@ -27,27 +23,34 @@ export default async function OrganizationPage() {
     role: string;
   };
 
+  function roleLabel(r: string): string {
+    if (r === "admin") return t("roleAdmin");
+    if (r === "member") return t("roleMember");
+    if (r === "viewer") return t("roleViewer");
+    return r;
+  }
+
   return (
     <>
       <section className="rounded-xl border border-gray-200 bg-white p-6">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-400">
-          Company details
+          {t("companyDetails")}
         </h2>
         <dl className="space-y-4">
           <div className="flex items-center justify-between">
-            <dt className="text-sm text-gray-500">Company name</dt>
+            <dt className="text-sm text-gray-500">{t("companyName")}</dt>
             <dd className="text-sm font-medium text-gray-900">{company.name}</dd>
           </div>
           <div className="flex items-center justify-between">
-            <dt className="text-sm text-gray-500">NIP</dt>
+            <dt className="text-sm text-gray-500">{t("nip")}</dt>
             <dd className="font-mono text-sm font-medium text-gray-900">{company.nip}</dd>
           </div>
           <div className="flex items-center justify-between">
-            <dt className="text-sm text-gray-500">Company ID</dt>
+            <dt className="text-sm text-gray-500">{t("companyId")}</dt>
             <dd className="font-mono text-xs text-gray-400">{company.id}</dd>
           </div>
           <div className="flex items-center justify-between">
-            <dt className="text-sm text-gray-500">Registered</dt>
+            <dt className="text-sm text-gray-500">{t("registered")}</dt>
             <dd className="text-sm font-medium text-gray-900">
               {new Date(company.created_at).toLocaleDateString("pl-PL")}
             </dd>
@@ -58,13 +61,13 @@ export default async function OrganizationPage() {
       <section className="rounded-xl border border-gray-200 bg-white p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
-            Team
+            {t("team")}
           </h2>
           <button
             disabled
             className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-400 cursor-not-allowed"
           >
-            Invite member
+            {t("inviteMember")}
           </button>
         </div>
         <div className="flex items-center gap-3 rounded-lg bg-gray-50 px-4 py-3">
@@ -75,14 +78,14 @@ export default async function OrganizationPage() {
             <p className="truncate text-sm font-medium text-gray-900">
               {session!.user.email}
             </p>
-            <p className="text-xs text-gray-400">{ROLE_LABELS[role] ?? role}</p>
+            <p className="text-xs text-gray-400">{roleLabel(role)}</p>
           </div>
           <span className="flex-shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-            You
+            {t("you")}
           </span>
         </div>
         <p className="mt-3 text-xs text-gray-400">
-          Member management will be available in a future release.
+          {t("memberManagement")}
         </p>
       </section>
     </>

@@ -9,6 +9,7 @@ import { PdfPreview } from "@/components/review/PdfPreview";
 import { InvoiceForm } from "@/components/review/InvoiceForm";
 import { ValidationErrors } from "@/components/review/ValidationErrors";
 import { ApproveButton } from "@/components/review/ApproveButton";
+import { useTranslations } from "next-intl";
 
 interface InvoiceDraftOut {
   id: string;
@@ -50,6 +51,7 @@ interface ValidationErrorOut {
 }
 
 export default function ReviewDetailPage() {
+  const t = useTranslations("Review");
   const { id } = useParams<{ id: string }>();
 
   const [draft, setDraft] = useState<InvoiceDraftOut | null>(null);
@@ -70,13 +72,13 @@ export default function ReviewDetailPage() {
         setErrors(errorsData);
         setRole(companyData.role);
       } catch {
-        setLoadError("Failed to load document data.");
+        setLoadError(t("loadError"));
       } finally {
         setLoading(false);
       }
     }
     load();
-  }, [id]);
+  }, [id, t]);
 
   function handleSaved(updatedDraft: InvoiceDraftOut, updatedErrors: ValidationErrorOut[]) {
     setDraft(updatedDraft);
@@ -86,7 +88,7 @@ export default function ReviewDetailPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <p className="text-sm text-gray-500">Loading…</p>
+        <p className="text-sm text-gray-500">{t("loading")}</p>
       </div>
     );
   }
@@ -94,7 +96,7 @@ export default function ReviewDetailPage() {
   if (loadError || !draft) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <p className="text-sm text-red-600">{loadError ?? "Document not found."}</p>
+        <p className="text-sm text-red-600">{loadError ?? t("notFound")}</p>
       </div>
     );
   }
@@ -105,15 +107,15 @@ export default function ReviewDetailPage() {
 
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-3">
         <div>
-          <h1 className="text-lg font-semibold">Review invoice</h1>
+          <h1 className="text-lg font-semibold">{t("reviewTitle")}</h1>
           <p className="font-mono text-xs text-gray-400">{id}</p>
         </div>
         <div className="flex items-center gap-4">
           <Link href={`/audit/${id}`} className="text-sm text-gray-500 hover:underline">
-            History
+            {t("history")}
           </Link>
           <Link href="/review" className="text-sm text-blue-600 hover:underline">
-            ← Review queue
+            {t("backToQueue")}
           </Link>
         </div>
       </div>

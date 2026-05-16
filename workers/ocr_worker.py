@@ -1,3 +1,9 @@
+# OCR Worker — Step 1 of the pipeline.
+# Downloads the uploaded PDF from Supabase Storage and sends the raw bytes directly
+# to Google Cloud Vision's batch_annotate_files API (Vision parses the PDF internally —
+# no image conversion happens on our side). Vision returns extracted text per page;
+# we concatenate it and store it in ocr_results, then enqueue an extraction job.
+# Retries up to 3 times with exponential backoff; moves to ocr_failed after exhaustion.
 import logging
 import os
 from uuid import UUID

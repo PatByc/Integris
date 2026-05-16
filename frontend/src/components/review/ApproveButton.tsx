@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiPost, ApiError } from "@/lib/api";
+import { useTranslations } from "next-intl";
 
 interface Props {
   documentId: string;
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function ApproveButton({ documentId, role, hasErrors }: Props) {
+  const t = useTranslations("Review");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -25,7 +27,7 @@ export function ApproveButton({ documentId, role, hasErrors }: Props) {
       await apiPost(`/api/v1/documents/${documentId}/approve`, {});
       router.push("/dashboard");
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Approval failed");
+      setError(e instanceof ApiError ? e.message : t("approvalFailed"));
     } finally {
       setLoading(false);
     }
@@ -38,13 +40,13 @@ export function ApproveButton({ documentId, role, hasErrors }: Props) {
         disabled={disabled}
         className="w-full rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-40"
       >
-        {loading ? "Approving…" : "Approve invoice"}
+        {loading ? t("approving") : t("approveInvoice")}
       </button>
       {isViewer && (
-        <p className="text-xs text-gray-500">Viewers cannot approve invoices.</p>
+        <p className="text-xs text-gray-500">{t("viewerCannotApprove")}</p>
       )}
       {hasErrors && !isViewer && (
-        <p className="text-xs text-gray-500">Resolve all validation errors to enable approval.</p>
+        <p className="text-xs text-gray-500">{t("resolveErrors")}</p>
       )}
       {error && <p className="text-xs text-red-600">{error}</p>}
     </div>

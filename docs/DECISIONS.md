@@ -144,7 +144,22 @@ Follow-up: Status is indexed (`idx_documents_status_orm`) for dashboard filterin
 
 ---
 
-## DEC-010: Test suite — types, scope, and results
+## DEC-010: Multilanguage support via next-intl (cookie-based, no URL routing)
+
+Date: 2026-05-15
+Status: accepted
+
+Decision: `next-intl` with cookie-based locale (`NEXT_LOCALE` cookie, default `pl`). No `[locale]` URL segments — all routes stay as-is. Language toggle in Settings > System sets the cookie and calls `router.refresh()`. Translation files at `frontend/messages/pl.json` and `frontend/messages/en.json`, organised by namespace. Server components use `getTranslations()`, client components use `useTranslations()`.
+
+Reason: Polish is the target market default. English is required for international users and the dev team. Cookie-based approach avoids restructuring all 15 app routes into `[locale]/` wrappers. Two languages only — no need for URL-based locale routing.
+
+Tradeoffs: Locale not visible in the URL (not shareable by URL). Acceptable for a B2B SaaS app where users are always authenticated and locale is a personal preference. If URL-based locale is ever needed, migration to `[locale]/` routing is possible later.
+
+Follow-up: Complete — `t()` wired in all 22 source files across 10 namespaces (Landing, Auth, Nav, Dashboard, Upload, DocumentsTable, StatusBadge, Review, Audit, Help, Settings). Avatar dropdown redesigned with `flex-row-reverse` so all menu texts are right-aligned and sub-menu chevrons appear on the left.
+
+---
+
+## DEC-011: Test suite — types, scope, and results
 
 Date: 2026-05-14
 Status: accepted
@@ -176,7 +191,7 @@ Follow-up: When KSeF sandbox credentials are available, add `tests/test_ksef_san
 
 ---
 
-## DEC-011: Audit trail page — per-document event timeline
+## DEC-012: Audit trail page — per-document event timeline
 
 Date: 2026-05-14
 Status: accepted
@@ -191,7 +206,7 @@ Follow-up: `AuditEventOut` extended with `event_metadata` and `user_id` so the t
 
 ---
 
-## DEC-012: Avatar dropdown menu — UI scaffold
+## DEC-013: Avatar dropdown menu — UI scaffold
 
 Date: 2026-05-14
 Status: accepted
@@ -206,7 +221,7 @@ Follow-up: Wired in DEC-013.
 
 ---
 
-## DEC-013: Avatar dropdown — Log out, Settings, Help wired
+## DEC-014: Avatar dropdown — Log out, Settings, Help wired
 
 Date: 2026-05-14
 Status: accepted
@@ -221,3 +236,95 @@ Reason: These were the last no-op items in the UI per DEC-012.
 Tradeoffs: Settings is read-only for MVP — no editing of company name, NIP, or user profile. Editing requires PATCH endpoints and is post-MVP scope.
 
 Follow-up: Add member management (invite/remove users) to the Settings page in a future phase.
+
+---
+
+## DEC-015: Browser language auto-detection via Accept-Language header
+
+Date: 2026-05-15
+Status: accepted
+
+Decision: `frontend/i18n/request.ts` now reads the `Accept-Language` request header when no `NEXT_LOCALE` cookie exists. If the header contains `"pl"`, locale defaults to Polish; otherwise English. If the header is absent entirely (bots, automated requests), defaults to Polish (target market).
+
+Reason: First-time visitors always saw Polish regardless of browser language. English-speaking users or international team members had to manually switch in Settings before seeing English.
+
+Tradeoffs: Detection runs on every request for visitors without the cookie (slightly more work per request). Once the user visits Settings or the cookie is set by any means, detection stops running.
+
+Follow-up: None. The cookie remains the source of truth for returning visitors.
+
+---
+
+## DEC-016: GDPR/legal compliance pages and cookie consent
+
+Date: 2026-05-15
+Status: accepted
+
+Decision: Added three interconnected legal compliance features:
+
+1. **Cookie consent banner** (`frontend/src/components/CookieBanner.tsx`) — fixed bottom bar on all pages (root layout), accept-only, stores `cookie_consent=accepted` cookie (1 year). Uses `useTranslations("CookieBanner")` — bilingual (pl/en).
+
+2. **Privacy Policy + Cookie Policy** (`frontend/src/app/privacy/page.tsx`) — combined static Polish page at `/privacy` covering: data controller (placeholder), data categories, legal basis (art. 6 RODO), retention periods, third-party processors (Supabase, Google Cloud, OpenAI, KSeF), user rights, and a cookie table (cookie_consent / NEXT_LOCALE / sb-*-auth-token).
+
+3. **Terms of Service + DPA** (`frontend/src/app/terms/page.tsx`) — static Polish page at `/terms` covering: service scope (what Integris is and is NOT), acceptable use, liability limits (AI errors, KSeF rejections), governing law (Polish courts, Warsaw). Includes **Aneks A — Umowa Powierzenia Danych Osobowych** (art. 28 RODO) with sub-processor table (Supabase, Google Cloud, OpenAI with SCC basis).
+
+4. **ToS acceptance at registration** (`frontend/src/app/(auth)/register/page.tsx`) — mandatory checkbox linking to `/terms` and `/privacy`. Submit button disabled until checked. On signup, `tos_accepted_at` (ISO timestamp) and `tos_version: "1.0"` stored in Supabase `raw_user_meta_data` — no DB migration required.
+
+5. **Links wired throughout**: landing page footer, avatar dropdown Privacy Policy and Terms of Service buttons (previously no-ops).
+
+Reason: GDPR (EU) and ePrivacy Directive require cookie consent and privacy notice. B2B SaaS requires ToS for liability protection and a DPA (art. 28 RODO) because Integris processes invoice data containing personal data on behalf of users' companies.
+
+Tradeoffs: All legal content is in Polish only (placeholder data controller fields need real values). Cookie banner is accept-only (no reject) — acceptable since Integris uses only functional cookies, no tracking or advertising.
+
+Follow-up: Replace `[NAZWA FIRMY]`, `[ADRES]`, `[EMAIL]`, `[DOMENA]` placeholders with real values before go-live. Have a Polish lawyer review the DPA annex before first B2B contract.
+
+---
+
+## DEC-017: Dashboard metric cards + table header enhancements
+
+Date: 2026-05-16
+Status: accepted
+
+Decision: Added three summary cards above the document table (Pending Review, Awaiting Submission with PLN total, OCR Accuracy with progress bar). Added table header bar with date-range filter (All time / 7 days / 30 days), "Showing X of Y" count, per-row checkboxes with select-all, and two disabled placeholder buttons (Export Report, Upload Batch). These buttons are documented in `docs/POST_MVP.md`.
+
+Reason: Dashboard was a flat list with no at-a-glance status. Metric cards give immediate visibility into workload. Date filter and count are standard table UI expectations.
+
+Tradeoffs: Stats are fetched server-side at page load (`GET /api/v1/documents/stats`). The `/stats` route must appear BEFORE `/{document_id}` routes in FastAPI to prevent "stats" being matched as a UUID.
+
+Follow-up: Export Report and Upload Batch functionality documented in `docs/POST_MVP.md` for future implementation.
+
+---
+
+## DEC-018: Dashboard bento section — activity, pipeline, storage
+
+Date: 2026-05-16
+Status: accepted
+
+Decision: Added a `BentoSection` component below the document table with three panels:
+1. **Documents — last 7 days**: bar chart (pure HTML/CSS, no chart library) showing docs uploaded per day.
+2. **Pipeline breakdown**: counts grouped by meaningful stage (Processing / Needs Review / Ready to Submit / Submitted / Accepted / Failed). Only non-zero stages are shown.
+3. **PDF Storage**: total bytes from `file_size_bytes` summed from the `documents` table (scoped to company). Shows percentage of quota beneath it.
+
+New backend endpoint: `GET /api/v1/documents/bento-stats`. Fetched client-side on mount so it does not delay the initial SSR page load.
+
+Reason: Gives operators a real-time picture of pipeline health and storage consumption without fake data or marketing metrics.
+
+Tradeoffs: Storage quota is not exposed by any Supabase API. Quota is read from `STORAGE_QUOTA_BYTES` env var (default 1 GB = Supabase free tier). Must be updated manually when upgrading Supabase plan.
+
+Follow-up: When upgrading Supabase plan, set `STORAGE_QUOTA_BYTES` in backend `.env` to match the new quota.
+
+---
+
+## DEC-019: Worker scaling — one shared queue per type, not per user
+
+Date: 2026-05-16
+Status: accepted
+
+Decision: Workers are shared across all companies/users. One running OCR worker process handles all companies' jobs from the same Redis queue. Scaling is done by starting additional instances of the same worker type (they compete for jobs via `blpop`), not by running per-user or per-company workers.
+
+Reason: The queue is company-agnostic; multi-tenant isolation is enforced at the data level (every job has `document_id` → worker fetches `company_id` from DB). Running separate workers per company would be operationally expensive and unnecessary.
+
+Documented in `workers/base_worker.py` docstring.
+
+Tradeoffs: None for MVP scale. At high load, a single slow company could delay others in the queue. Fair-queue scheduling is post-MVP.
+
+Follow-up: If one company generates disproportionate volume, a per-company queue routing strategy can be added to `BaseWorker` without changing the worker logic.

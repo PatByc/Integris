@@ -2,8 +2,11 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { UploadZone } from "@/components/UploadZone";
 import { AppHeader } from "@/components/AppHeader";
+import { getTranslations } from "next-intl/server";
 
-export default function UploadPage() {
+export default async function UploadPage() {
+  const t = await getTranslations("Upload");
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Suspense>
@@ -13,12 +16,12 @@ export default function UploadPage() {
       <main className="mx-auto max-w-2xl px-6 py-12">
         <div className="mb-6">
           <Link href="/dashboard" className="text-sm text-gray-500 hover:underline">
-            ← Back to dashboard
+            {t("backToDashboard")}
           </Link>
         </div>
-        <h1 className="mb-2 text-xl font-semibold">Upload invoice</h1>
+        <h1 className="mb-2 text-xl font-semibold">{t("title")}</h1>
         <p className="mb-8 text-sm text-gray-600">
-          Upload a PDF invoice to begin processing.
+          {t("subtitle")}
         </p>
         <UploadZone />
       </main>

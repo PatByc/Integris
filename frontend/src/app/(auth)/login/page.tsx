@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase";
+import { useTranslations } from "next-intl";
 
 // Spritesheet: 1152×768px, 6 cols × 4 rows = 24 frames, each 192×192px
 const COLS = 6;
@@ -41,6 +42,7 @@ function SpriteLoader() {
 }
 
 export default function LoginPage() {
+  const t = useTranslations("Auth");
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -70,11 +72,11 @@ export default function LoginPage() {
 
   return (
     <>
-      <h1 className="mb-6 text-2xl font-bold">Sign in to Integris</h1>
+      <h1 className="mb-6 text-2xl font-bold">{t("signInTitle")}</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">
-            Email
+            {t("email")}
           </label>
           <input
             type="email"
@@ -86,7 +88,7 @@ export default function LoginPage() {
         </div>
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">
-            Password
+            {t("password")}
           </label>
           <input
             type="password"
@@ -105,17 +107,17 @@ export default function LoginPage() {
           {loading ? (
             <>
               <SpriteLoader />
-              <span>Signing in…</span>
+              <span>{t("signingIn")}</span>
             </>
           ) : (
-            "Sign in"
+            t("signIn")
           )}
         </button>
       </form>
       <p className="mt-4 text-center text-sm text-gray-600">
-        Don&apos;t have an account?{" "}
+        {t("noAccount")}{" "}
         <Link href="/register" className="text-blue-600 hover:underline">
-          Register
+          {t("register")}
         </Link>
       </p>
     </>

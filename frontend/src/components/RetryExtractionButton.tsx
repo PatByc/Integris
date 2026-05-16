@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -11,6 +12,7 @@ interface RetryExtractionButtonProps {
 }
 
 export function RetryExtractionButton({ documentId, token }: RetryExtractionButtonProps) {
+  const t = useTranslations("DocumentsTable");
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,11 +27,11 @@ export function RetryExtractionButton({ documentId, token }: RetryExtractionButt
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error((data as { detail?: string }).detail ?? "Retry failed");
+        throw new Error((data as { detail?: string }).detail ?? t("retryFailed"));
       }
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Retry failed");
+      setError(err instanceof Error ? err.message : t("retryFailed"));
     } finally {
       setLoading(false);
     }
@@ -42,7 +44,7 @@ export function RetryExtractionButton({ documentId, token }: RetryExtractionButt
         disabled={loading}
         className="rounded bg-orange-50 px-2 py-1 text-xs font-medium text-orange-700 hover:bg-orange-100 disabled:opacity-50"
       >
-        {loading ? "Retrying…" : "Retry extraction"}
+        {loading ? t("retrying") : t("retryExtraction")}
       </button>
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>

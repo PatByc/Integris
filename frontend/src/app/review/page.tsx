@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { AppHeader } from "@/components/AppHeader";
+import { getTranslations } from "next-intl/server";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -21,6 +22,7 @@ interface DocumentItem {
 }
 
 export default async function ReviewQueuePage() {
+  const t = await getTranslations("Review");
   const supabase = await createSupabaseServerClient();
   const {
     data: { session },
@@ -48,23 +50,23 @@ export default async function ReviewQueuePage() {
 
       <main className="mx-auto max-w-5xl px-6 py-8">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-lg font-semibold">Review queue</h1>
+          <h1 className="text-lg font-semibold">{t("queueTitle")}</h1>
           <Link href="/dashboard" className="text-sm text-blue-600 hover:underline">
-            ← Dashboard
+            {t("backToDashboard")}
           </Link>
         </div>
         {reviewDocs.length === 0 ? (
           <div className="rounded-lg border border-dashed border-gray-300 bg-white py-16 text-center">
-            <p className="text-gray-500">No invoices awaiting review.</p>
+            <p className="text-gray-500">{t("noInvoices")}</p>
           </div>
         ) : (
           <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
             <table className="w-full text-sm">
               <thead className="border-b border-gray-200 bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                 <tr>
-                  <th className="px-4 py-3">Filename</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Uploaded</th>
+                  <th className="px-4 py-3">{t("filename")}</th>
+                  <th className="px-4 py-3">{t("status")}</th>
+                  <th className="px-4 py-3">{t("uploaded")}</th>
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
@@ -87,7 +89,7 @@ export default async function ReviewQueuePage() {
                         href={`/review/${doc.id}`}
                         className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
                       >
-                        Review
+                        {t("review")}
                       </Link>
                     </td>
                   </tr>

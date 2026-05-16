@@ -13,6 +13,20 @@ class BaseWorker:
     Pull-based Redis worker. Subclasses implement handle() for job processing.
     Job format: {"document_id": "<uuid>", ...}
     Retry policy: up to max_retries with exponential backoff before re-queuing to DLQ.
+
+    How queuing works across multiple users:
+    Workers are shared across ALL users and companies — you do not run one set of
+    workers per user. When any user uploads a document, a job is pushed to the
+    relevant Redis queue (e.g. "ocr_queue"). The worker process sits in a blocking
+    loop calling blpop(), which pops the next job regardless of which user or company
+    it belongs to. Multi-tenant isolation is handled at the data level: every job
+    carries a document_id, and the worker fetches the document from the DB (which
+    includes company_id) before doing any work.
+
+    Scaling: you run one set of 7 worker processes for the entire app. If a queue
+    is backing up under load (e.g. 50 invoices waiting for OCR), start a second
+    ocr_worker process — both will compete for jobs from the same queue. That is a
+    capacity decision based on throughput, not on user count.
     """
 
     MAX_RETRIES = 3

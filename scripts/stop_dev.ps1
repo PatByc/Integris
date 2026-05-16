@@ -1,4 +1,4 @@
-<#
+﻿﻿<#
 .SYNOPSIS
     Stop all Integris dev services started by start_dev.ps1.
     Reads process IDs from .dev-pids and terminates them.
@@ -11,7 +11,7 @@ $pidFile = Join-Path $root ".dev-pids"
 
 if (-not (Test-Path $pidFile)) {
     Write-Host ""
-    Write-Host "No .dev-pids file found — services may not be running." -ForegroundColor Yellow
+    Write-Host "No .dev-pids file found """ services may not be running." -ForegroundColor Yellow
     Write-Host ""
     exit 0
 }
@@ -49,3 +49,4 @@ if ($stopped -gt 0) {
     Write-Host "No running processes found (already stopped?)." -ForegroundColor DarkGray
 }
 Write-Host ""
+

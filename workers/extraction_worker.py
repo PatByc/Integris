@@ -1,3 +1,10 @@
+# Extraction Worker — Step 2 of the pipeline.
+# Reads the raw OCR text stored by the OCR worker and sends it to GPT-4.1-mini
+# with a strict system prompt that demands a specific JSON schema (seller, buyer,
+# amounts, line items, VAT breakdown, etc.). The LLM response is parsed, stored as
+# an invoice_draft + line_items, then validated against business rules (missing NIP,
+# totals mismatch, etc.). Validation errors are stored separately for display in the
+# review UI. Status → needs_review on success, extraction_failed after 3 retries.
 import json
 import logging
 import os

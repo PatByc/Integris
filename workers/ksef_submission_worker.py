@@ -1,3 +1,12 @@
+# KSeF Submission Worker — Step 4 of the pipeline.
+# Reads the generated FA(3) XML, authenticates with the KSeF API, opens a session,
+# posts the XML, and records the KSeF reference number returned by the API.
+# Supports three modes via KSEF_ENV env var:
+#   dry_run    — no HTTP call, assigns a fake DRY-RUN-XXXXXXXX reference (default for dev)
+#   sandbox    — submits to the KSeF test environment (api-test.ksef.mf.gov.pl)
+#   production — submits to the live KSeF (api.ksef.mf.gov.pl)
+# Idempotent: skips re-submission if the document is already submitted/accepted.
+# Status → submission_pending → submitted on success, rejected after 3 retries.
 import logging
 import os
 from uuid import UUID

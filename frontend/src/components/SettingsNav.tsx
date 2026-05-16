@@ -2,16 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-const TABS = [
-  { label: "System", href: "/settings/system" },
-  { label: "Account", href: "/settings/account" },
-  { label: "Organization profile", href: "/settings/organization" },
-  { label: "API Credentials", href: "/settings/api-page" },
-];
+import { useTranslations } from "next-intl";
 
 export function SettingsNav() {
   const pathname = usePathname();
+  const t = useTranslations("Nav");
+
+  const TABS = [
+    { label: t("system"), href: "/settings/system" },
+    { label: t("account"), href: "/settings/account" },
+    { label: t("organizationProfile"), href: "/settings/organization" },
+    { label: t("apiCredentials"), href: "/settings/api-page" },
+  ];
 
   return (
     <nav className="w-48 flex-shrink-0">

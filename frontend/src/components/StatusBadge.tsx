@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { apiGet } from "@/lib/api";
+import { useTranslations } from "next-intl";
 
 const STATUS_BADGE: Record<string, string> = {
   uploaded: "bg-blue-100 text-blue-700",
@@ -20,24 +21,24 @@ const STATUS_BADGE: Record<string, string> = {
   cancelled: "bg-gray-100 text-gray-500",
 };
 
-const EVENT_LABELS: Record<string, string> = {
-  "document.uploaded": "Uploaded",
-  "ocr.started": "OCR started",
-  "ocr.succeeded": "OCR done",
-  "ocr.failed": "OCR failed",
-  "ocr.retry_requested": "OCR retry",
-  "extraction.started": "Extraction started",
-  "extraction.succeeded": "Extraction done",
-  "extraction.failed": "Extraction failed",
-  "extraction.retry_requested": "Extraction retry",
-  "review.approved": "Approved",
-  "xml_generation.succeeded": "XML generated",
-  "xml_generation.failed": "XML failed",
-  "ksef.submission.requested": "Submission requested",
-  "ksef.submission.succeeded": "Submitted to KSeF",
-  "ksef.submission.failed": "KSeF submission failed",
-  "ksef.upo.accepted": "KSeF accepted",
-  "ksef.upo.rejected": "KSeF rejected",
+const EVENT_KEY_MAP: Record<string, string> = {
+  "document.uploaded":          "eventDocumentUploaded",
+  "ocr.started":                "eventOcrStarted",
+  "ocr.succeeded":              "eventOcrSucceeded",
+  "ocr.failed":                 "eventOcrFailed",
+  "ocr.retry_requested":        "eventOcrRetry",
+  "extraction.started":         "eventExtractionStarted",
+  "extraction.succeeded":       "eventExtractionSucceeded",
+  "extraction.failed":          "eventExtractionFailed",
+  "extraction.retry_requested": "eventExtractionRetry",
+  "review.approved":            "eventReviewApproved",
+  "xml_generation.succeeded":   "eventXmlSucceeded",
+  "xml_generation.failed":      "eventXmlFailed",
+  "ksef.submission.requested":  "eventSubmissionRequested",
+  "ksef.submission.succeeded":  "eventSubmissionSucceeded",
+  "ksef.submission.failed":     "eventSubmissionFailed",
+  "ksef.upo.accepted":          "eventUpoAccepted",
+  "ksef.upo.rejected":          "eventUpoRejected",
 };
 
 interface HistoryEvent {
@@ -51,6 +52,7 @@ interface Props {
 }
 
 export function StatusBadge({ documentId, status }: Props) {
+  const t = useTranslations("StatusBadge");
   const [open, setOpen] = useState(false);
   const [history, setHistory] = useState<HistoryEvent[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -85,11 +87,14 @@ export function StatusBadge({ documentId, status }: Props) {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tAny = t as (key: string) => string;
+
   return (
     <div ref={containerRef} className="relative inline-block">
       <button
         onClick={toggle}
-        title="Click to see status history"
+        title={t("clickHistory")}
         className={`cursor-pointer rounded px-2 py-0.5 text-xs font-medium ring-offset-1 transition-all hover:ring-2 hover:ring-current hover:ring-offset-1 ${STATUS_BADGE[status] ?? "bg-gray-100 text-gray-600"}`}
       >
         {status.replace(/_/g, " ")}
@@ -98,21 +103,23 @@ export function StatusBadge({ documentId, status }: Props) {
       {open && (
         <div className="absolute left-0 top-full z-50 mt-1 w-56 rounded-lg border border-gray-200 bg-white py-2 shadow-lg">
           <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-            Status history
+            {t("statusHistory")}
           </p>
-          {loading && <p className="px-3 py-1 text-xs text-gray-400">Loading…</p>}
+          {loading && <p className="px-3 py-1 text-xs text-gray-400">{t("loading")}</p>}
           {!loading && history?.length === 0 && (
-            <p className="px-3 py-1 text-xs text-gray-400">No history yet.</p>
+            <p className="px-3 py-1 text-xs text-gray-400">{t("noHistory")}</p>
           )}
           {!loading && history && history.length > 0 && (
             <ul>
               {history.map((ev, i) => {
                 const d = new Date(ev.created_at);
+                const key = EVENT_KEY_MAP[ev.event_type];
+                const label = key ? tAny(key) : ev.event_type;
                 return (
                   <li key={i} className="flex items-baseline justify-between gap-2 px-3 py-1">
                     <span className="flex items-center gap-1.5 text-xs text-gray-700">
                       <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-blue-400" />
-                      {EVENT_LABELS[ev.event_type] ?? ev.event_type}
+                      {label}
                     </span>
                     <span className="flex-shrink-0 text-[10px] text-gray-400">
                       {d.toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit" })}{" "}

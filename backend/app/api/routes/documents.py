@@ -1,4 +1,5 @@
-from datetime import datetime
+import os
+from datetime import date, datetime
 from typing import Annotated
 from uuid import UUID
 
@@ -14,12 +15,27 @@ from app.core.queue import enqueue_extraction_job, enqueue_ksef_submission_job, 
 from app.models.company import CompanyMembership
 from app.models.document import AuditEvent
 from app.repositories import invoice_draft_repository, ksef_submission_repository, validation_error_repository, xml_export_repository
+from app.repositories import document_repository as doc_repo
 from app.repositories.document_repository import get_by_id, list_by_company
 from app.schemas.document_schema import DocumentListOut, DocumentOut
 from app.schemas.invoice_draft_schema import InvoiceDraftOut, InvoiceDraftUpdate, LineItemOut
 from app.schemas.validation_error_schema import ValidationErrorOut
 from app.services import audit_service, document_service, invoice_review_service
 from app.services.company_service import ensure_profile
+
+
+class DashboardStatsOut(BaseModel):
+    pending_review: int
+    awaiting_submission: int
+    awaiting_submission_gross_total: float
+    ocr_success_rate: float | None
+
+
+class BentoStatsOut(BaseModel):
+    docs_per_day: list[dict]
+    status_breakdown: dict[str, int]
+    storage_bytes: int
+    storage_quota_bytes: int
 
 
 class AuditEventOut(BaseModel):
@@ -51,6 +67,25 @@ async def upload_document(
     return DocumentOut.model_validate(doc)
 
 
+@router.get("/bento-stats", response_model=BentoStatsOut)
+async def get_bento_stats(
+    membership: Annotated[CompanyMembership, Depends(get_current_membership)],
+    db: AsyncSession = Depends(get_db),
+) -> BentoStatsOut:
+    data = await doc_repo.get_bento_stats(db, membership.company_id)
+    quota = int(os.getenv("STORAGE_QUOTA_BYTES", str(1024 ** 3)))
+    return BentoStatsOut(**data, storage_quota_bytes=quota)
+
+
+@router.get("/stats", response_model=DashboardStatsOut)
+async def get_dashboard_stats(
+    membership: Annotated[CompanyMembership, Depends(get_current_membership)],
+    db: AsyncSession = Depends(get_db),
+) -> DashboardStatsOut:
+    data = await doc_repo.get_stats(db, membership.company_id)
+    return DashboardStatsOut(**data)
+
+
 @router.get("", response_model=DocumentListOut)
 async def list_documents(
     membership: Annotated[CompanyMembership, Depends(get_current_membership)],
@@ -59,8 +94,12 @@ async def list_documents(
     offset: int = Query(default=0, ge=0),
     status: str | None = Query(default=None),
     q: str | None = Query(default=None),
+    date_from: date | None = Query(default=None),
 ) -> DocumentListOut:
-    items, total = await list_by_company(db, membership.company_id, limit=limit, offset=offset, status=status, q=q)
+    items, total = await list_by_company(
+        db, membership.company_id,
+        limit=limit, offset=offset, status=status, q=q, date_from=date_from,
+    )
     return DocumentListOut(
         items=[DocumentOut.model_validate(d) for d in items],
         total=total,

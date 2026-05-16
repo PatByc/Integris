@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import logo from "@/logo.png";
 import { createClient } from "@/lib/supabase";
+import { useTranslations } from "next-intl";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const POLL_MS = 30_000;
@@ -19,24 +20,20 @@ interface NotificationItem {
   is_unread: boolean;
 }
 
-const ROLE_LABELS: Record<string, string> = {
-  admin: "Administrator",
-  member: "Member",
-  viewer: "Viewer",
-};
-
-function relativeTime(iso: string): string {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function relativeTime(iso: string, t: (key: string, values?: Record<string, unknown>) => string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const s = Math.floor(diff / 1000);
-  if (s < 60) return "just now";
+  if (s < 60) return t("justNow");
   const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ago`;
+  if (m < 60) return t("minutesAgo", { m });
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
+  if (h < 24) return t("hoursAgo", { h });
   return new Date(iso).toLocaleDateString("pl-PL");
 }
 
 export function AppHeader() {
+  const t = useTranslations("Nav");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -68,9 +65,9 @@ export function AppHeader() {
       } = await supabase.auth.getSession();
       if (!session) return;
 
-      const t = session.access_token;
-      tokenRef.current = t;
-      setToken(t);
+      const tok = session.access_token;
+      tokenRef.current = tok;
+      setToken(tok);
 
       const user = session.user;
       const name =
@@ -82,7 +79,7 @@ export function AppHeader() {
 
       try {
         const res = await fetch(`${API_URL}/api/v1/companies/me`, {
-          headers: { Authorization: `Bearer ${t}` },
+          headers: { Authorization: `Bearer ${tok}` },
         });
         if (res.ok) {
           const data = (await res.json()) as { role?: string; company?: { name?: string } };
@@ -95,11 +92,11 @@ export function AppHeader() {
   }, []);
 
   const fetchNotifications = useCallback(async () => {
-    const t = tokenRef.current;
-    if (!t) return;
+    const tok = tokenRef.current;
+    if (!tok) return;
     try {
       const res = await fetch(`${API_URL}/api/v1/notifications`, {
-        headers: { Authorization: `Bearer ${t}` },
+        headers: { Authorization: `Bearer ${tok}` },
       });
       if (!res.ok) return;
       const data = (await res.json()) as {
@@ -148,12 +145,12 @@ export function AppHeader() {
       return;
     }
     setBellOpen(true);
-    const t = tokenRef.current;
-    if (unreadCount > 0 && t) {
+    const tok = tokenRef.current;
+    if (unreadCount > 0 && tok) {
       try {
         await fetch(`${API_URL}/api/v1/notifications/read`, {
           method: "POST",
-          headers: { Authorization: `Bearer ${t}` },
+          headers: { Authorization: `Bearer ${tok}` },
         });
         setUnreadCount(0);
         setNotifications((prev) => prev.map((n) => ({ ...n, is_unread: false })));
@@ -179,8 +176,18 @@ export function AppHeader() {
     }, 400);
   }
 
-  const initials = userName.charAt(0).toUpperCase();
+  function roleLabel(r: string): string {
+    if (r === "admin") return t("roleAdmin");
+    if (r === "member") return t("roleMember");
+    if (r === "viewer") return t("roleViewer");
+    return r;
+  }
+
+  const initials = userName.trim().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("");
   const companyInitial = (companyName || "W").charAt(0).toUpperCase();
+
+  // Cast t to the simpler signature for relativeTime
+  const tSimple = t as (key: string, values?: Record<string, unknown>) => string;
 
   return (
     <header className="border-b border-gray-200 bg-white px-6 py-3">
@@ -208,7 +215,7 @@ export function AppHeader() {
               type="text"
               value={inputValue}
               onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder="Search invoices, files or contractors..."
+              placeholder={t("searchPlaceholder")}
               className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-9 pr-4 text-sm text-gray-700 placeholder:text-gray-400 focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-400"
             />
             {inputValue && (
@@ -240,19 +247,17 @@ export function AppHeader() {
                 />
               </svg>
               {unreadCount > 0 && (
-                <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white">
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
+                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />
               )}
             </button>
 
             {bellOpen && (
               <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-lg border border-gray-200 bg-white shadow-lg">
                 <p className="border-b border-gray-100 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-gray-400">
-                  Notifications
+                  {t("notifications")}
                 </p>
                 {notifications.length === 0 ? (
-                  <p className="px-4 py-6 text-center text-sm text-gray-400">All caught up</p>
+                  <p className="px-4 py-6 text-center text-sm text-gray-400">{t("allCaughtUp")}</p>
                 ) : (
                   <ul className="max-h-72 overflow-y-auto">
                     {notifications.slice(0, 10).map((n, i) => (
@@ -270,7 +275,7 @@ export function AppHeader() {
                           )}
                         </div>
                         <span className="flex-shrink-0 text-xs text-gray-400">
-                          {relativeTime(n.created_at)}
+                          {relativeTime(n.created_at, tSimple)}
                         </span>
                       </li>
                     ))}
@@ -282,6 +287,7 @@ export function AppHeader() {
 
           {/* Avatar */}
           {userName && (
+            <div className="flex items-center pl-4 border-l border-gray-200">
             <div ref={avatarRef} className="relative">
               <button
                 onClick={() => setAvatarOpen((o) => !o)}
@@ -302,22 +308,22 @@ export function AppHeader() {
 
                   {/* ── Workspace row — flyout on hover ── */}
                   <div className="group relative">
-                    <div className="flex cursor-default items-center justify-between rounded-t-xl px-4 py-3 hover:bg-gray-50">
-                      <div className="min-w-0">
+                    <div className="flex cursor-default items-center rounded-t-xl px-4 py-3 hover:bg-gray-50">
+                      <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-gray-900">
                           {companyName || "Workspace"}
                         </p>
                         <p className="mt-0.5 text-xs capitalize text-gray-400">
-                          {ROLE_LABELS[role] ?? role}
+                          {roleLabel(role)}
                         </p>
                       </div>
                       <svg className="ml-2 h-3.5 w-3.5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
                     </div>
 
                     {/* Workspace flyout */}
-                    <div className="invisible absolute right-full top-0 z-50 w-60 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg group-hover:visible">
+                    <div className="invisible absolute left-full top-0 z-50 w-60 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg group-hover:visible">
                       {/* Email */}
                       <div className="flex items-center gap-2.5 border-b border-gray-100 px-4 py-3">
                         <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-gray-100">
@@ -365,7 +371,7 @@ export function AppHeader() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      Settings
+                      {t("settings")}
                     </button>
 
                     {/* Help row — flyout on hover */}
@@ -375,15 +381,15 @@ export function AppHeader() {
                           <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
-                          Help
+                          {t("help")}
                         </span>
                         <svg className="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                       </div>
 
                       {/* Help flyout */}
-                      <div className="invisible absolute right-full top-0 z-50 w-52 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg group-hover:visible">
+                      <div className="invisible absolute left-full top-0 z-50 w-52 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg group-hover:visible">
                         <div className="py-1">
                           <button
                             onClick={() => { setAvatarOpen(false); router.push("/help"); }}
@@ -392,7 +398,7 @@ export function AppHeader() {
                             <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            Help center
+                            {t("helpCenter")}
                           </button>
                           <button
                             onClick={() => setAvatarOpen(false)}
@@ -401,7 +407,7 @@ export function AppHeader() {
                             <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A2 2 0 013 8V5a2 2 0 012-2z" />
                             </svg>
-                            Release notes
+                            {t("releaseNotes")}
                           </button>
                         </div>
 
@@ -409,22 +415,22 @@ export function AppHeader() {
 
                         <div className="py-1">
                           <button
-                            onClick={() => setAvatarOpen(false)}
+                            onClick={() => { setAvatarOpen(false); router.push("/terms"); }}
                             className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                           >
                             <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
-                            Terms of Service
+                            {t("termsOfService")}
                           </button>
                           <button
-                            onClick={() => setAvatarOpen(false)}
+                            onClick={() => { setAvatarOpen(false); router.push("/privacy"); }}
                             className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                           >
                             <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            Privacy Policy
+                            {t("privacyPolicy")}
                           </button>
                           <button
                             onClick={() => { setAvatarOpen(false); window.location.href = "mailto:support@integris.pl"; }}
@@ -433,7 +439,7 @@ export function AppHeader() {
                             <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                             </svg>
-                            Report a bug
+                            {t("reportBug")}
                           </button>
                         </div>
                       </div>
@@ -451,11 +457,12 @@ export function AppHeader() {
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                       </svg>
-                      Log out
+                      {t("logOut")}
                     </button>
                   </div>
                 </div>
               )}
+            </div>
             </div>
           )}
         </div>

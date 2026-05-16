@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 interface ValidationError {
   id: string;
   rule_name: string;
@@ -12,10 +14,12 @@ interface Props {
 }
 
 export function ValidationErrors({ errors }: Props) {
+  const t = useTranslations("Review");
+
   if (errors.length === 0) {
     return (
       <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3">
-        <p className="text-sm font-medium text-green-700">No validation errors</p>
+        <p className="text-sm font-medium text-green-700">{t("noValidationErrors")}</p>
       </div>
     );
   }
@@ -23,7 +27,7 @@ export function ValidationErrors({ errors }: Props) {
   return (
     <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
       <p className="mb-2 text-sm font-medium text-red-700">
-        {errors.length} validation error{errors.length !== 1 ? "s" : ""}
+        {t("validationErrors", { count: errors.length })}
       </p>
       <ul className="space-y-1">
         {errors.map((e) => (

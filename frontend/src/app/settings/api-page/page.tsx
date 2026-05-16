@@ -5,6 +5,7 @@ import { useState } from "react";
 import openAILogo from "@/openAI_logo.png";
 import anthropicLogo from "@/anthropic_logo.png";
 import geminiLogo from "@/gemini_logo.jpg";
+import { useTranslations } from "next-intl";
 
 type Mode = "integris" | "external";
 type AIProvider = "openai" | "anthropic" | "gemini";
@@ -62,6 +63,7 @@ function ProviderLogo({ id, size = 20 }: { id: AIProvider; size?: number }) {
 }
 
 function ModeToggle({ value, onChange }: { value: Mode; onChange: (v: Mode) => void }) {
+  const t = useTranslations("Settings");
   return (
     <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-0.5">
       {(["integris", "external"] as const).map((m) => (
@@ -74,7 +76,7 @@ function ModeToggle({ value, onChange }: { value: Mode; onChange: (v: Mode) => v
               : "text-gray-500 hover:text-gray-700"
           }`}
         >
-          {m}
+          {m === "integris" ? t("integrisMode") : t("externalMode")}
         </button>
       ))}
     </div>
@@ -121,6 +123,7 @@ function KeyInput({ value, onChange, placeholder }: { value: string; onChange: (
 }
 
 export default function ApiCredentialsPage() {
+  const t = useTranslations("Settings");
   const [aiMode, setAiMode] = useState<Mode>("integris");
   const [aiProvider, setAiProvider] = useState<AIProvider>("openai");
   const [aiModel, setAiModel] = useState("gpt-4.1-mini");
@@ -141,14 +144,20 @@ export default function ApiCredentialsPage() {
 
   const modelsForCurrentContext = aiMode === "integris" ? AI_MODELS.openai : AI_MODELS[aiProvider];
 
+  const ksefLabels = [
+    { label: t("clientNip"),   env: "KSEF_CLIENT_NIP" },
+    { label: t("authToken"),   env: "KSEF_CLIENT_SECRET" },
+    { label: t("mfPublicKey"), env: "KSEF_PUBLIC_KEY_PEM" },
+  ];
+
   return (
     <>
       {/* ── AI Provider ── */}
       <section className="rounded-xl border border-gray-200 bg-white p-6">
         <div className="mb-5 flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-gray-900">AI Provider</h2>
-            <p className="mt-0.5 text-xs text-gray-400">Used for invoice field extraction from OCR text</p>
+            <h2 className="text-sm font-semibold text-gray-900">{t("aiProvider")}</h2>
+            <p className="mt-0.5 text-xs text-gray-400">{t("aiProviderDesc")}</p>
           </div>
           <ModeToggle value={aiMode} onChange={handleAiModeChange} />
         </div>
@@ -156,7 +165,7 @@ export default function ApiCredentialsPage() {
         {aiMode === "integris" ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">Provider</span>
+              <span className="text-sm text-gray-500">{t("provider")}</span>
               <div className="flex items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-400">
                 <ProviderLogo id="openai" size={20} />
                 OpenAI
@@ -164,7 +173,7 @@ export default function ApiCredentialsPage() {
               </div>
             </div>
             <div className="flex items-center justify-between gap-4">
-              <span className="text-sm text-gray-500">Model</span>
+              <span className="text-sm text-gray-500">{t("model")}</span>
               <select
                 value={aiModel}
                 onChange={(e) => setAiModel(e.target.value)}
@@ -176,13 +185,13 @@ export default function ApiCredentialsPage() {
               </select>
             </div>
             <p className="rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-600">
-              API key managed by Integris. Switch to External to use your own key.
+              {t("apiKeyManagedByIntegris")}
             </p>
           </div>
         ) : (
           <div className="space-y-5">
             <div>
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-400">Provider</p>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-400">{t("provider")}</p>
               <div className="grid grid-cols-3 gap-2">
                 {AI_PROVIDERS.map((p) => (
                   <button
@@ -201,7 +210,7 @@ export default function ApiCredentialsPage() {
               </div>
             </div>
             <div className="flex items-center justify-between gap-4">
-              <span className="text-sm text-gray-500">Model</span>
+              <span className="text-sm text-gray-500">{t("model")}</span>
               <select
                 value={aiModel}
                 onChange={(e) => setAiModel(e.target.value)}
@@ -222,7 +231,7 @@ export default function ApiCredentialsPage() {
                   disabled={!aiKey.trim()}
                   className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Save
+                  {t("save")}
                 </button>
               </div>
             </div>
@@ -234,8 +243,8 @@ export default function ApiCredentialsPage() {
       <section className="rounded-xl border border-gray-200 bg-white p-6">
         <div className="mb-5 flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-gray-900">OCR Provider</h2>
-            <p className="mt-0.5 text-xs text-gray-400">Used for text extraction from uploaded PDF invoices</p>
+            <h2 className="text-sm font-semibold text-gray-900">{t("ocrProvider")}</h2>
+            <p className="mt-0.5 text-xs text-gray-400">{t("ocrProviderDesc")}</p>
           </div>
           <ModeToggle value={ocrMode} onChange={setOcrMode} />
         </div>
@@ -243,7 +252,7 @@ export default function ApiCredentialsPage() {
         {ocrMode === "integris" ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">Provider</span>
+              <span className="text-sm text-gray-500">{t("provider")}</span>
               <div className="flex items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-400">
                 <ProviderLogo id="gemini" size={20} />
                 Google Cloud Vision
@@ -251,13 +260,13 @@ export default function ApiCredentialsPage() {
               </div>
             </div>
             <p className="rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-600">
-              API key managed by Integris. Switch to External to use your own key.
+              {t("apiKeyManagedByIntegris")}
             </p>
           </div>
         ) : (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">Provider</span>
+              <span className="text-sm text-gray-500">{t("provider")}</span>
               <div className="flex items-center gap-2 rounded-lg border border-blue-500 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700">
                 <ProviderLogo id="gemini" size={20} />
                 Google Cloud Vision
@@ -273,7 +282,7 @@ export default function ApiCredentialsPage() {
                   disabled={!ocrKey.trim()}
                   className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Save
+                  {t("save")}
                 </button>
               </div>
             </div>
@@ -283,16 +292,12 @@ export default function ApiCredentialsPage() {
 
       {/* ── KSeF Credentials ── */}
       <section className="rounded-xl border border-gray-200 bg-white p-6">
-        <h2 className="mb-1 text-sm font-semibold text-gray-900">KSeF Credentials</h2>
+        <h2 className="mb-1 text-sm font-semibold text-gray-900">{t("ksefCredentials")}</h2>
         <p className="mb-4 text-xs text-gray-400">
-          Managed via server environment variables. Contact your administrator to update them.
+          {t("ksefCredentialsDesc")}
         </p>
         <dl className="space-y-4">
-          {[
-            { label: "Client NIP",        env: "KSEF_CLIENT_NIP" },
-            { label: "Auth token",         env: "KSEF_CLIENT_SECRET" },
-            { label: "MF public key (PEM)", env: "KSEF_PUBLIC_KEY_PEM" },
-          ].map(({ label, env }) => (
+          {ksefLabels.map(({ label, env }) => (
             <div key={env} className="flex items-center justify-between">
               <div>
                 <dt className="text-sm text-gray-500">{label}</dt>
@@ -302,7 +307,7 @@ export default function ApiCredentialsPage() {
               </div>
               <dd>
                 <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500">
-                  env-managed
+                  {t("envManaged")}
                 </span>
               </dd>
             </div>
@@ -313,14 +318,13 @@ export default function ApiCredentialsPage() {
       {/* ── Integris API Key ── */}
       <section className="rounded-xl border border-gray-200 bg-white p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-gray-900">Integris API key</h2>
+          <h2 className="text-sm font-semibold text-gray-900">{t("integrisApiKey")}</h2>
           <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-600">
-            Coming soon
+            {t("comingSoon")}
           </span>
         </div>
         <p className="text-sm text-gray-500">
-          API keys for machine-to-machine integration with your ERP or accounting system
-          will be available in a future release.
+          {t("integrisApiKeyDesc")}
         </p>
         <div className="mt-4 flex items-center gap-3 rounded-lg border border-dashed border-gray-200 bg-gray-50 px-4 py-3">
           <svg className="h-4 w-4 flex-shrink-0 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">

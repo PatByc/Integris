@@ -8,6 +8,14 @@
 $root    = Split-Path $PSScriptRoot -Parent
 $pidFile = Join-Path $root ".dev-pids"
 
+Write-Host "Starting Redis..." -ForegroundColor Yellow
+docker-compose up redis -d
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "docker-compose failed - is Docker Desktop running?" -ForegroundColor Red
+    exit 1
+}
+Start-Sleep -Seconds 3
+
 function Get-Encoded {
     param([string]$Command)
     $bytes = [System.Text.Encoding]::Unicode.GetBytes($Command)

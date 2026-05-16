@@ -4,11 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase";
+import { useTranslations } from "next-intl";
 
 export default function RegisterPage() {
+  const t = useTranslations("Auth");
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -21,6 +24,12 @@ export default function RegisterPage() {
       const { error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            tos_accepted_at: new Date().toISOString(),
+            tos_version: "1.0",
+          },
+        },
       });
       if (authError) {
         setError(authError.message);
@@ -35,11 +44,11 @@ export default function RegisterPage() {
 
   return (
     <>
-      <h1 className="mb-6 text-2xl font-bold">Create your account</h1>
+      <h1 className="mb-6 text-2xl font-bold">{t("createAccountTitle")}</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">
-            Email
+            {t("email")}
           </label>
           <input
             type="email"
@@ -51,7 +60,7 @@ export default function RegisterPage() {
         </div>
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">
-            Password
+            {t("password")}
           </label>
           <input
             type="password"
@@ -62,19 +71,33 @@ export default function RegisterPage() {
             className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
+        <label className="flex items-start gap-2 text-sm text-gray-600">
+          <input
+            type="checkbox"
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-gray-300"
+          />
+          <span>
+            {t("agreePrefix")}{" "}
+            <Link href="/terms" className="underline hover:text-gray-900">{t("termsLink")}</Link>
+            {" "}{t("agreeAnd")}{" "}
+            <Link href="/privacy" className="underline hover:text-gray-900">{t("privacyLink")}</Link>
+          </span>
+        </label>
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !agreed}
           className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
         >
-          {loading ? "Creating account…" : "Create account"}
+          {loading ? t("creatingAccount") : t("createAccount")}
         </button>
       </form>
       <p className="mt-4 text-center text-sm text-gray-600">
-        Already have an account?{" "}
+        {t("alreadyHaveAccount")}{" "}
         <Link href="/login" className="text-blue-600 hover:underline">
-          Sign in
+          {t("signIn")}
         </Link>
       </p>
     </>

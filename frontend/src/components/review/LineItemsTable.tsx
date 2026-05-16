@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 export interface LineItem {
   id?: string;
   description: string;
@@ -30,18 +32,20 @@ const EMPTY_ITEM: LineItem = {
   sort_order: 0,
 };
 
-const COLS: { key: keyof LineItem; label: string; width: string }[] = [
-  { key: "description", label: "Description", width: "w-40" },
-  { key: "quantity", label: "Qty", width: "w-16" },
-  { key: "unit", label: "Unit", width: "w-16" },
-  { key: "unit_price_net", label: "Unit price (net)", width: "w-28" },
-  { key: "vat_rate", label: "VAT %", width: "w-16" },
-  { key: "net_amount", label: "Net", width: "w-24" },
-  { key: "vat_amount", label: "VAT", width: "w-24" },
-  { key: "gross_amount", label: "Gross", width: "w-24" },
-];
-
 export function LineItemsTable({ items, onChange }: Props) {
+  const t = useTranslations("Review");
+
+  const COLS: { key: keyof LineItem; label: string; width: string }[] = [
+    { key: "description",   label: t("description"),  width: "w-40" },
+    { key: "quantity",      label: t("qty"),          width: "w-16" },
+    { key: "unit",          label: t("unit"),         width: "w-16" },
+    { key: "unit_price_net",label: t("unitPriceNet"), width: "w-28" },
+    { key: "vat_rate",      label: t("vatPct"),       width: "w-16" },
+    { key: "net_amount",    label: t("net"),          width: "w-24" },
+    { key: "vat_amount",    label: t("vat"),          width: "w-24" },
+    { key: "gross_amount",  label: t("gross"),        width: "w-24" },
+  ];
+
   function update(index: number, key: keyof LineItem, value: string) {
     const next = items.map((item, i) =>
       i === index ? { ...item, [key]: value } : item
@@ -89,7 +93,7 @@ export function LineItemsTable({ items, onChange }: Props) {
                     type="button"
                     onClick={() => removeRow(i)}
                     className="text-red-400 hover:text-red-600"
-                    title="Remove row"
+                    title={t("removeRow")}
                   >
                     ✕
                   </button>
@@ -104,7 +108,7 @@ export function LineItemsTable({ items, onChange }: Props) {
         onClick={addRow}
         className="text-xs text-blue-600 hover:underline"
       >
-        + Add line item
+        {t("addLineItem")}
       </button>
     </div>
   );

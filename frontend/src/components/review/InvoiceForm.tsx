@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { apiPatch, ApiError } from "@/lib/api";
 import { LineItemsTable, type LineItem } from "./LineItemsTable";
+import { useTranslations } from "next-intl";
 
 interface InvoiceDraftOut {
   id: string;
@@ -91,6 +92,7 @@ function Field({
 }
 
 export function InvoiceForm({ documentId, initialDraft, onSaved }: Props) {
+  const t = useTranslations("Review");
   const [form, setForm] = useState({
     seller_name: initialDraft.seller_name ?? "",
     seller_nip: initialDraft.seller_nip ?? "",
@@ -148,7 +150,7 @@ export function InvoiceForm({ documentId, initialDraft, onSaved }: Props) {
       );
       onSaved(updatedDraft, errors);
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Save failed");
+      setError(e instanceof ApiError ? e.message : t("saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -157,50 +159,50 @@ export function InvoiceForm({ documentId, initialDraft, onSaved }: Props) {
   return (
     <div className="space-y-6">
       <section>
-        <h3 className="mb-3 text-sm font-semibold text-gray-700">Seller</h3>
+        <h3 className="mb-3 text-sm font-semibold text-gray-700">{t("seller")}</h3>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Name" value={form.seller_name} onChange={set("seller_name")} />
-          <Field label="NIP" value={form.seller_nip} onChange={set("seller_nip")} />
+          <Field label={t("name")} value={form.seller_name} onChange={set("seller_name")} />
+          <Field label={t("nip")} value={form.seller_nip} onChange={set("seller_nip")} />
           <div className="col-span-2">
-            <Field label="Address" value={form.seller_address} onChange={set("seller_address")} />
+            <Field label={t("address")} value={form.seller_address} onChange={set("seller_address")} />
           </div>
         </div>
       </section>
 
       <section>
-        <h3 className="mb-3 text-sm font-semibold text-gray-700">Buyer</h3>
+        <h3 className="mb-3 text-sm font-semibold text-gray-700">{t("buyer")}</h3>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Name" value={form.buyer_name} onChange={set("buyer_name")} />
-          <Field label="NIP" value={form.buyer_nip} onChange={set("buyer_nip")} />
+          <Field label={t("name")} value={form.buyer_name} onChange={set("buyer_name")} />
+          <Field label={t("nip")} value={form.buyer_nip} onChange={set("buyer_nip")} />
           <div className="col-span-2">
-            <Field label="Address" value={form.buyer_address} onChange={set("buyer_address")} />
+            <Field label={t("address")} value={form.buyer_address} onChange={set("buyer_address")} />
           </div>
         </div>
       </section>
 
       <section>
-        <h3 className="mb-3 text-sm font-semibold text-gray-700">Invoice details</h3>
+        <h3 className="mb-3 text-sm font-semibold text-gray-700">{t("invoiceDetails")}</h3>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Invoice number" value={form.invoice_number} onChange={set("invoice_number")} />
-          <Field label="Currency" value={form.currency} onChange={set("currency")} />
-          <Field label="Issue date" value={form.issue_date} onChange={set("issue_date")} type="date" />
-          <Field label="Sale date" value={form.sale_date} onChange={set("sale_date")} type="date" />
-          <Field label="Payment due" value={form.payment_due_date} onChange={set("payment_due_date")} type="date" />
-          <Field label="Payment method" value={form.payment_method} onChange={set("payment_method")} />
+          <Field label={t("invoiceNumber")} value={form.invoice_number} onChange={set("invoice_number")} />
+          <Field label={t("currency")} value={form.currency} onChange={set("currency")} />
+          <Field label={t("issueDate")} value={form.issue_date} onChange={set("issue_date")} type="date" />
+          <Field label={t("saleDate")} value={form.sale_date} onChange={set("sale_date")} type="date" />
+          <Field label={t("paymentDue")} value={form.payment_due_date} onChange={set("payment_due_date")} type="date" />
+          <Field label={t("paymentMethod")} value={form.payment_method} onChange={set("payment_method")} />
         </div>
       </section>
 
       <section>
-        <h3 className="mb-3 text-sm font-semibold text-gray-700">Totals</h3>
+        <h3 className="mb-3 text-sm font-semibold text-gray-700">{t("totals")}</h3>
         <div className="grid grid-cols-3 gap-3">
-          <Field label="Net total" value={form.net_total} onChange={set("net_total")} />
-          <Field label="VAT total" value={form.vat_total} onChange={set("vat_total")} />
-          <Field label="Gross total" value={form.gross_total} onChange={set("gross_total")} />
+          <Field label={t("netTotal")} value={form.net_total} onChange={set("net_total")} />
+          <Field label={t("vatTotal")} value={form.vat_total} onChange={set("vat_total")} />
+          <Field label={t("grossTotal")} value={form.gross_total} onChange={set("gross_total")} />
         </div>
       </section>
 
       <section>
-        <h3 className="mb-3 text-sm font-semibold text-gray-700">Line items</h3>
+        <h3 className="mb-3 text-sm font-semibold text-gray-700">{t("lineItems")}</h3>
         <LineItemsTable items={lineItems} onChange={setLineItems} />
       </section>
 
@@ -211,7 +213,7 @@ export function InvoiceForm({ documentId, initialDraft, onSaved }: Props) {
         disabled={saving}
         className="w-full rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
       >
-        {saving ? "Saving…" : "Save changes"}
+        {saving ? t("saving") : t("saveChanges")}
       </button>
     </div>
   );

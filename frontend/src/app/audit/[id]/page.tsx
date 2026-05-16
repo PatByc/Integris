@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { AppHeader } from "@/components/AppHeader";
+import { getTranslations } from "next-intl/server";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -19,32 +20,28 @@ interface DocumentOut {
   status: string;
 }
 
-// ── Human-readable labels ─────────────────────────────────────────────────────
+// ── Event type → translation key ─────────────────────────────────────────────
 
-const EVENT_LABELS: Record<string, string> = {
-  "document.uploaded":           "Invoice uploaded",
-  "ocr.started":                 "OCR processing started",
-  "ocr.completed":               "OCR completed",
-  "ocr.failed":                  "OCR failed",
-  "ocr.retry_requested":         "OCR retry requested",
-  "extraction.started":          "AI extraction started",
-  "extraction.completed":        "AI extraction completed",
-  "extraction.failed":           "AI extraction failed",
-  "extraction.retry_requested":  "Extraction retry requested",
-  "validation.completed":        "Validation completed",
-  "review.correction_saved":     "Corrections saved",
-  "review.approved":             "Invoice approved",
-  "xml_generation.succeeded":    "FA(3) XML generated",
-  "xml_generation.failed":       "XML generation failed",
-  "ksef.submission.requested":   "KSeF submission requested",
-  "ksef.submission.accepted":    "KSeF accepted",
-  "ksef.submission.rejected":    "KSeF rejected",
-  "ksef.upo.received":           "UPO received",
+const EVENT_KEY_MAP: Record<string, string> = {
+  "document.uploaded":           "eventDocumentUploaded",
+  "ocr.started":                 "eventOcrStarted",
+  "ocr.completed":               "eventOcrCompleted",
+  "ocr.failed":                  "eventOcrFailed",
+  "ocr.retry_requested":         "eventOcrRetry",
+  "extraction.started":          "eventExtractionStarted",
+  "extraction.completed":        "eventExtractionCompleted",
+  "extraction.failed":           "eventExtractionFailed",
+  "extraction.retry_requested":  "eventExtractionRetry",
+  "validation.completed":        "eventValidationCompleted",
+  "review.correction_saved":     "eventCorrectionSaved",
+  "review.approved":             "eventReviewApproved",
+  "xml_generation.succeeded":    "eventXmlSucceeded",
+  "xml_generation.failed":       "eventXmlFailed",
+  "ksef.submission.requested":   "eventSubmissionRequested",
+  "ksef.submission.accepted":    "eventSubmissionAccepted",
+  "ksef.submission.rejected":    "eventSubmissionRejected",
+  "ksef.upo.received":           "eventUpoReceived",
 };
-
-function eventLabel(type: string): string {
-  return EVENT_LABELS[type] ?? type.replace(/[._]/g, " ");
-}
 
 // ── Dot colour ────────────────────────────────────────────────────────────────
 
@@ -57,15 +54,17 @@ function dotClass(type: string): string {
 
 // ── Metadata summary ──────────────────────────────────────────────────────────
 
-function MetaSummary({ meta }: { meta: Record<string, unknown> }) {
+type AuditT = (key: string, values?: Record<string, unknown>) => string;
+
+function MetaSummary({ meta, t }: { meta: Record<string, unknown>; t: AuditT }) {
   const lines: string[] = [];
 
-  if (meta.error)         lines.push(`Error: ${meta.error}`);
-  if (meta.attempt)       lines.push(`Attempt: ${meta.attempt}`);
+  if (meta.error)         lines.push(t("metaError", { error: String(meta.error) }));
+  if (meta.attempt)       lines.push(t("metaAttempt", { attempt: String(meta.attempt) }));
   if (meta.content_hash)  lines.push(`SHA-256: ${String(meta.content_hash).slice(0, 16)}…`);
-  if (meta.size_bytes)    lines.push(`Size: ${Number(meta.size_bytes).toLocaleString()} bytes`);
-  if (meta.line_item_count !== undefined) lines.push(`Line items: ${meta.line_item_count}`);
-  if (meta.retry === true) lines.push("Retry");
+  if (meta.size_bytes)    lines.push(t("metaSize", { bytes: Number(meta.size_bytes).toLocaleString() }));
+  if (meta.line_item_count !== undefined) lines.push(t("metaLineItems", { count: meta.line_item_count }));
+  if (meta.retry === true) lines.push(t("metaRetry"));
 
   if (lines.length === 0) return null;
   return (
@@ -81,6 +80,7 @@ export default async function AuditPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const t = await getTranslations("Audit");
 
   const supabase = await createSupabaseServerClient();
   const { data: { session } } = await supabase.auth.getSession();
@@ -99,6 +99,12 @@ export default async function AuditPage({
   const doc: DocumentOut = await docRes.json();
   const events: AuditEvent[] = historyRes.ok ? await historyRes.json() : [];
 
+  function eventLabel(type: string): string {
+    const key = EVENT_KEY_MAP[type];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return key ? (t as any)(key) : type.replace(/[._]/g, " ");
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Suspense>
@@ -109,7 +115,7 @@ export default async function AuditPage({
         {/* Header */}
         <div className="mb-6 flex items-start justify-between">
           <div>
-            <h1 className="text-lg font-semibold">Document history</h1>
+            <h1 className="text-lg font-semibold">{t("title")}</h1>
             <p className="mt-0.5 text-sm text-gray-500 truncate max-w-sm">{doc.filename}</p>
             <p className="font-mono text-xs text-gray-400">{id}</p>
           </div>
@@ -117,14 +123,14 @@ export default async function AuditPage({
             href={`/review/${id}`}
             className="text-sm text-blue-600 hover:underline whitespace-nowrap"
           >
-            ← Back to review
+            {t("backToReview")}
           </Link>
         </div>
 
         {/* Timeline */}
         {events.length === 0 ? (
           <div className="rounded-lg border border-dashed border-gray-300 bg-white py-16 text-center">
-            <p className="text-sm text-gray-500">No events recorded yet.</p>
+            <p className="text-sm text-gray-500">{t("noEvents")}</p>
           </div>
         ) : (
           <div className="rounded-lg border border-gray-200 bg-white px-6 py-6">
@@ -150,7 +156,7 @@ export default async function AuditPage({
                         timeStyle: "medium",
                       })}
                     </p>
-                    <MetaSummary meta={ev.event_metadata} />
+                    <MetaSummary meta={ev.event_metadata} t={t as AuditT} />
                   </div>
                 </li>
               ))}

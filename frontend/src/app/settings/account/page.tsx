@@ -1,14 +1,10 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server";
-
-const ROLE_LABELS: Record<string, string> = {
-  admin: "Administrator",
-  member: "Member",
-  viewer: "Viewer",
-};
+import { getTranslations } from "next-intl/server";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export default async function AccountPage() {
+  const t = await getTranslations("Settings");
   const supabase = await createSupabaseServerClient();
   const {
     data: { session },
@@ -32,31 +28,38 @@ export default async function AccountPage() {
     }
   } catch {}
 
+  function roleLabel(r: string): string {
+    if (r === "admin") return t("roleAdmin");
+    if (r === "member") return t("roleMember");
+    if (r === "viewer") return t("roleViewer");
+    return r;
+  }
+
   return (
     <>
       <section className="rounded-xl border border-gray-200 bg-white p-6">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-400">
-          Profile
+          {t("profile")}
         </h2>
         <dl className="space-y-4">
           <div className="flex items-center justify-between">
-            <dt className="text-sm text-gray-500">Display name</dt>
+            <dt className="text-sm text-gray-500">{t("displayName")}</dt>
             <dd className="text-sm font-medium text-gray-900">{userName}</dd>
           </div>
           <div className="flex items-center justify-between">
-            <dt className="text-sm text-gray-500">Email address</dt>
+            <dt className="text-sm text-gray-500">{t("emailAddress")}</dt>
             <dd className="text-sm font-medium text-gray-900">{user.email}</dd>
           </div>
           {role && (
             <div className="flex items-center justify-between">
-              <dt className="text-sm text-gray-500">Role</dt>
+              <dt className="text-sm text-gray-500">{t("role")}</dt>
               <dd className="text-sm font-medium text-gray-900">
-                {ROLE_LABELS[role] ?? role}
+                {roleLabel(role)}
               </dd>
             </div>
           )}
           <div className="flex items-center justify-between">
-            <dt className="text-sm text-gray-500">Account created</dt>
+            <dt className="text-sm text-gray-500">{t("accountCreated")}</dt>
             <dd className="text-sm font-medium text-gray-900">
               {new Date(user.created_at).toLocaleDateString("pl-PL")}
             </dd>
@@ -66,40 +69,40 @@ export default async function AccountPage() {
 
       <section className="rounded-xl border border-gray-200 bg-white p-6">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-400">
-          Security
+          {t("security")}
         </h2>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-900">Password</p>
+            <p className="text-sm font-medium text-gray-900">{t("password")}</p>
             <p className="mt-0.5 text-xs text-gray-400">
-              Last changed: unknown
+              {t("lastChanged")}
             </p>
           </div>
           <button
             disabled
             className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-400 cursor-not-allowed"
           >
-            Change password
+            {t("changePassword")}
           </button>
         </div>
       </section>
 
       <section className="rounded-xl border border-red-100 bg-white p-6">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-red-400">
-          Danger zone
+          {t("dangerZone")}
         </h2>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-900">Delete account</p>
+            <p className="text-sm font-medium text-gray-900">{t("deleteAccount")}</p>
             <p className="mt-0.5 text-xs text-gray-400">
-              Permanently remove your account and all associated data.
+              {t("deleteAccountDesc")}
             </p>
           </div>
           <button
             disabled
             className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-300 cursor-not-allowed"
           >
-            Delete account
+            {t("deleteAccount")}
           </button>
         </div>
       </section>

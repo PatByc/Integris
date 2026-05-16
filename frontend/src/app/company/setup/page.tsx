@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import logo from "@/logo.png";
 import { apiPost, ApiError } from "@/lib/api";
+import { useTranslations } from "next-intl";
 
 export default function CompanySetupPage() {
+  const t = useTranslations("Auth");
   const router = useRouter();
   const [name, setName] = useState("");
   const [nip, setNip] = useState("");
@@ -22,7 +24,7 @@ export default function CompanySetupPage() {
       router.push("/dashboard");
       router.refresh();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong");
+      setError(err instanceof ApiError ? err.message : t("somethingWentWrong"));
     } finally {
       setLoading(false);
     }
@@ -32,14 +34,14 @@ export default function CompanySetupPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="w-full max-w-sm rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
         <Image src={logo} alt="Integris" height={36} className="mb-6 h-9 w-auto" />
-        <h1 className="mb-2 text-2xl font-bold">Set up your company</h1>
+        <h1 className="mb-2 text-2xl font-bold">{t("setupTitle")}</h1>
         <p className="mb-6 text-sm text-gray-600">
-          You&apos;ll be the owner of this company workspace.
+          {t("setupSubtitle")}
         </p>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
-              Company name
+              {t("companyName")}
             </label>
             <input
               type="text"
@@ -51,7 +53,7 @@ export default function CompanySetupPage() {
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
-              NIP
+              {t("nip")}
             </label>
             <input
               type="text"
@@ -63,7 +65,7 @@ export default function CompanySetupPage() {
               className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <p className="mt-1 text-xs text-gray-500">
-              10-digit Polish tax identifier
+              {t("nipHint")}
             </p>
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
@@ -72,7 +74,7 @@ export default function CompanySetupPage() {
             disabled={loading}
             className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            {loading ? "Creating…" : "Create company"}
+            {loading ? t("creating") : t("createCompany")}
           </button>
         </form>
       </div>

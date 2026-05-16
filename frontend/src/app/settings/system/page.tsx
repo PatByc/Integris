@@ -1,25 +1,30 @@
-export default function SystemPage() {
+import { getTranslations } from "next-intl/server";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+
+export default async function SystemPage() {
+  const t = await getTranslations("Settings");
+
   return (
     <>
       <section className="rounded-xl border border-gray-200 bg-white p-6">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-400">
-          Interface
+          {t("interface")}
         </h2>
         <dl className="space-y-4">
           <div className="flex items-center justify-between">
-            <dt className="text-sm text-gray-500">Language</dt>
-            <dd className="text-sm font-medium text-gray-900">Polish (pl-PL)</dd>
+            <dt className="text-sm text-gray-500">{t("language")}</dt>
+            <dd><LanguageSwitcher /></dd>
           </div>
           <div className="flex items-center justify-between">
-            <dt className="text-sm text-gray-500">Date format</dt>
+            <dt className="text-sm text-gray-500">{t("dateFormat")}</dt>
             <dd className="text-sm font-medium text-gray-900">DD.MM.YYYY</dd>
           </div>
           <div className="flex items-center justify-between">
-            <dt className="text-sm text-gray-500">Currency</dt>
+            <dt className="text-sm text-gray-500">{t("currency")}</dt>
             <dd className="text-sm font-medium text-gray-900">PLN (Polish Złoty)</dd>
           </div>
           <div className="flex items-center justify-between">
-            <dt className="text-sm text-gray-500">Timezone</dt>
+            <dt className="text-sm text-gray-500">{t("timezone")}</dt>
             <dd className="text-sm font-medium text-gray-900">Europe/Warsaw</dd>
           </div>
         </dl>
@@ -27,16 +32,15 @@ export default function SystemPage() {
 
       <section className="rounded-xl border border-gray-200 bg-white p-6">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-400">
-          KSeF integration
+          {t("ksefIntegration")}
         </h2>
         <dl className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <dt className="text-sm text-gray-500">Submission environment</dt>
+              <dt className="text-sm text-gray-500">{t("submissionEnvironment")}</dt>
               <p className="mt-0.5 text-xs text-gray-400">
-                Controlled via{" "}
-                <code className="rounded bg-gray-100 px-1 py-0.5 font-mono">KSEF_ENV</code>{" "}
-                server environment variable
+                {t("submissionEnvHint")}{" "}
+                <code className="rounded bg-gray-100 px-1 py-0.5 font-mono">KSEF_ENV</code>
               </p>
             </div>
             <dd>
@@ -46,11 +50,11 @@ export default function SystemPage() {
             </dd>
           </div>
           <div className="flex items-center justify-between">
-            <dt className="text-sm text-gray-500">Schema version</dt>
+            <dt className="text-sm text-gray-500">{t("schemaVersion")}</dt>
             <dd className="text-sm font-medium text-gray-900">FA(3)</dd>
           </div>
           <div className="flex items-center justify-between">
-            <dt className="text-sm text-gray-500">AI extraction model</dt>
+            <dt className="text-sm text-gray-500">{t("aiExtractionModel")}</dt>
             <dd className="text-sm font-medium text-gray-900">gpt-4.1-mini</dd>
           </div>
         </dl>
@@ -58,15 +62,15 @@ export default function SystemPage() {
 
       <section className="rounded-xl border border-gray-200 bg-white p-6">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-400">
-          About
+          {t("about")}
         </h2>
         <dl className="space-y-4">
           <div className="flex items-center justify-between">
-            <dt className="text-sm text-gray-500">Product</dt>
+            <dt className="text-sm text-gray-500">{t("product")}</dt>
             <dd className="text-sm font-medium text-gray-900">Integris</dd>
           </div>
           <div className="flex items-center justify-between">
-            <dt className="text-sm text-gray-500">Version</dt>
+            <dt className="text-sm text-gray-500">{t("version")}</dt>
             <dd className="text-sm font-medium text-gray-900">MVP 1.0</dd>
           </div>
         </dl>

@@ -1,3 +1,10 @@
+# KSeF UPO Polling Worker — Step 5 of the pipeline (time-based, not queue-based).
+# Runs a loop every 30 seconds. Each cycle fetches all submissions still in "submitted"
+# status from the DB and polls the KSeF status API for each one.
+# UPO = "Urzędowe Potwierdzenie Odbioru" — the official acceptance receipt from KSeF.
+# Status 200 from KSeF → marks document accepted, stores the UPO URL.
+# Status 405+ from KSeF → marks document rejected.
+# In dry_run mode → immediately marks everything as accepted with a fake KSeF number.
 import logging
 import os
 import time

@@ -1,17 +1,18 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { DocumentsTable } from "@/components/DocumentsTable";
 import { AppHeader } from "@/components/AppHeader";
 import { Sidebar } from "@/components/Sidebar";
+import { DashboardStats } from "@/components/DashboardStats";
+import { BentoSection } from "@/components/BentoSection";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; date_range?: string }>;
 }) {
   const supabase = await createSupabaseServerClient();
   const {
@@ -35,18 +36,31 @@ export default async function DashboardPage({
 
   const { company } = await companyRes.json();
 
-  const { q = "", status = "" } = await searchParams;
+  const { q = "", status = "", date_range = "" } = await searchParams;
   const params = new URLSearchParams({ limit: "20" });
   if (q) params.set("q", q);
   if (status) params.set("status", status);
+  if (date_range) {
+    const days = parseInt(date_range);
+    const dateFrom = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    params.set("date_from", dateFrom.toISOString().split("T")[0]);
+  }
 
-  const docsRes = await fetch(`${API_URL}/api/v1/documents?${params}`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  });
+  const [docsRes, statsRes] = await Promise.all([
+    fetch(`${API_URL}/api/v1/documents?${params}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    }),
+    fetch(`${API_URL}/api/v1/documents/stats`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    }),
+  ]);
 
   const { items: initialDocuments, total: initialTotal } =
     docsRes.ok ? await docsRes.json() : { items: [], total: 0 };
+
+  const stats = statsRes.ok ? await statsRes.json() : null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -57,15 +71,19 @@ export default async function DashboardPage({
       <Suspense><Sidebar /></Suspense>
 
       <main className="mx-auto max-w-5xl px-6 py-8 pl-20">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-4">
           <p className="text-sm text-gray-500">{company?.name}</p>
-          <Link
-            href="/upload"
-            className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            Upload invoice
-          </Link>
         </div>
+
+        {stats && (
+          <DashboardStats
+            pendingReview={stats.pending_review}
+            awaitingSubmission={stats.awaiting_submission}
+            awaitingSubmissionGrossTotal={stats.awaiting_submission_gross_total}
+            ocrSuccessRate={stats.ocr_success_rate}
+          />
+        )}
+
         <Suspense>
           <DocumentsTable
             token={token}
@@ -73,6 +91,8 @@ export default async function DashboardPage({
             initialTotal={initialTotal}
           />
         </Suspense>
+
+        <BentoSection token={token} />
       </main>
     </div>
   );

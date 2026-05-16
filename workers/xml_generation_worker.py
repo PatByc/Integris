@@ -1,3 +1,9 @@
+# XML Generation Worker — Step 3 of the pipeline, triggered after human approval.
+# Reads the approved invoice_draft and its line items from the DB, then passes them
+# to generate_fa3_xml() — a fully deterministic function that builds the FA(3) XML
+# required by KSeF. The AI is never involved here: this is pure template/schema logic.
+# The resulting XML string and its SHA-256 hash are stored in xml_exports.
+# Status → xml_generated on success.
 import hashlib
 import logging
 from uuid import UUID

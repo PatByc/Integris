@@ -6,25 +6,14 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { RetryOcrButton } from "@/components/RetryOcrButton";
 import { RetryExtractionButton } from "@/components/RetryExtractionButton";
 import { StatusBadge } from "@/components/StatusBadge";
+import { useTranslations } from "next-intl";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const POLL_MS = 4000;
 const PAGE_SIZE = 20;
 
-const ALL_STATUSES = [
-  { value: "", label: "All statuses" },
-  { value: "needs_review", label: "Needs review" },
-  { value: "validation_failed", label: "Validation failed" },
-  { value: "ocr_failed", label: "OCR failed" },
-  { value: "extraction_failed", label: "Extraction failed" },
-  { value: "xml_generated", label: "XML generated" },
-  { value: "submission_pending", label: "Submission pending" },
-  { value: "submitted", label: "Submitted" },
-  { value: "accepted", label: "Accepted" },
-  { value: "rejected", label: "Rejected" },
-];
-
 function SubmitToKsefButton({ documentId, token, onDone }: { documentId: string; token: string; onDone: () => void }) {
+  const t = useTranslations("DocumentsTable");
   const [loading, setLoading] = useState(false);
 
   async function handleClick() {
@@ -46,12 +35,14 @@ function SubmitToKsefButton({ documentId, token, onDone }: { documentId: string;
       disabled={loading}
       className="rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-60"
     >
-      {loading ? "Submitting…" : "Submit to KSeF"}
+      {loading ? t("submitting") : t("submitToKsef")}
     </button>
   );
 }
 
 function DownloadXmlButton({ documentId, token }: { documentId: string; token: string }) {
+  const t = useTranslations("DocumentsTable");
+
   async function handleClick() {
     const res = await fetch(`${API_URL}/api/v1/documents/${documentId}/xml-export`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -65,17 +56,19 @@ function DownloadXmlButton({ documentId, token }: { documentId: string; token: s
     a.click();
     URL.revokeObjectURL(url);
   }
+
   return (
     <button
       onClick={handleClick}
       className="rounded bg-teal-600 px-3 py-1 text-xs font-medium text-white hover:bg-teal-700"
     >
-      Download XML
+      {t("downloadXml")}
     </button>
   );
 }
 
 function DownloadUpoButton({ documentId, token }: { documentId: string; token: string }) {
+  const t = useTranslations("DocumentsTable");
   const [loading, setLoading] = useState(false);
 
   async function handleClick() {
@@ -101,12 +94,13 @@ function DownloadUpoButton({ documentId, token }: { documentId: string; token: s
       disabled={loading}
       className="rounded bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-60"
     >
-      {loading ? "Loading…" : "Download UPO"}
+      {loading ? t("loading") : t("downloadUpo")}
     </button>
   );
 }
 
 function DeleteButton({ documentId, token, onDone }: { documentId: string; token: string; onDone: () => void }) {
+  const t = useTranslations("DocumentsTable");
   const [confirm, setConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -132,13 +126,13 @@ function DeleteButton({ documentId, token, onDone }: { documentId: string; token
           disabled={loading}
           className="rounded bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-60"
         >
-          {loading ? "Deleting…" : "Confirm"}
+          {loading ? t("deleting") : t("confirm")}
         </button>
         <button
           onClick={() => setConfirm(false)}
           className="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-200"
         >
-          Cancel
+          {t("cancel")}
         </button>
       </div>
     );
@@ -149,12 +143,13 @@ function DeleteButton({ documentId, token, onDone }: { documentId: string; token
       onClick={() => setConfirm(true)}
       className="rounded px-2 py-1 text-xs font-medium text-gray-400 hover:bg-red-50 hover:text-red-600"
     >
-      Delete
+      {t("delete")}
     </button>
   );
 }
 
 function RetrySubmissionButton({ documentId, token, onDone }: { documentId: string; token: string; onDone: () => void }) {
+  const t = useTranslations("DocumentsTable");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -168,11 +163,11 @@ function RetrySubmissionButton({ documentId, token, onDone }: { documentId: stri
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error((data as { detail?: string }).detail ?? "Retry failed");
+        throw new Error((data as { detail?: string }).detail ?? t("retryFailed"));
       }
       onDone();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Retry failed");
+      setError(err instanceof Error ? err.message : t("retryFailed"));
     } finally {
       setLoading(false);
     }
@@ -185,7 +180,7 @@ function RetrySubmissionButton({ documentId, token, onDone }: { documentId: stri
         disabled={loading}
         className="rounded bg-red-50 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50"
       >
-        {loading ? "Retrying…" : "Retry submission"}
+        {loading ? t("retrying") : t("retrySubmission")}
       </button>
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
@@ -247,21 +242,37 @@ interface Props {
 }
 
 export function DocumentsTable({ token, initialDocuments, initialTotal }: Props) {
+  const t = useTranslations("DocumentsTable");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const q = searchParams.get("q") ?? "";
   const statusFilter = searchParams.get("status") ?? "";
+  const dateRange = searchParams.get("date_range") ?? "";
 
   const [documents, setDocuments] = useState<DocumentItem[]>(initialDocuments);
   const [total, setTotal] = useState(initialTotal);
   const [page, setPage] = useState(0);
+  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
 
   const pageRef = useRef(page);
   pageRef.current = page;
 
-  const fetchPage = useCallback(async (p: number, filter: string, query: string) => {
+  const ALL_STATUSES = [
+    { value: "", label: t("allStatuses") },
+    { value: "needs_review", label: t("needsReview") },
+    { value: "validation_failed", label: t("validationFailed") },
+    { value: "ocr_failed", label: t("ocrFailed") },
+    { value: "extraction_failed", label: t("extractionFailed") },
+    { value: "xml_generated", label: t("xmlGenerated") },
+    { value: "submission_pending", label: t("submissionPending") },
+    { value: "submitted", label: t("submitted") },
+    { value: "accepted", label: t("accepted") },
+    { value: "rejected", label: t("rejected") },
+  ];
+
+  const fetchPage = useCallback(async (p: number, filter: string, query: string, range: string) => {
     try {
       const params = new URLSearchParams({
         limit: String(PAGE_SIZE),
@@ -269,6 +280,11 @@ export function DocumentsTable({ token, initialDocuments, initialTotal }: Props)
       });
       if (filter) params.set("status", filter);
       if (query) params.set("q", query);
+      if (range) {
+        const days = parseInt(range);
+        const dateFrom = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+        params.set("date_from", dateFrom.toISOString().split("T")[0]);
+      }
       const res = await fetch(`${API_URL}/api/v1/documents?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -280,49 +296,62 @@ export function DocumentsTable({ token, initialDocuments, initialTotal }: Props)
   }, [token]);
 
   // Refetch and reset page whenever URL filters change
-  const prevFiltersRef = useRef({ q, statusFilter });
+  const prevFiltersRef = useRef({ q, statusFilter, dateRange });
   useEffect(() => {
     const prev = prevFiltersRef.current;
-    if (prev.q !== q || prev.statusFilter !== statusFilter) {
-      prevFiltersRef.current = { q, statusFilter };
+    if (prev.q !== q || prev.statusFilter !== statusFilter || prev.dateRange !== dateRange) {
+      prevFiltersRef.current = { q, statusFilter, dateRange };
       setPage(0);
-      fetchPage(0, statusFilter, q);
+      fetchPage(0, statusFilter, q, dateRange);
     }
-  }, [q, statusFilter, fetchPage]);
+  }, [q, statusFilter, dateRange, fetchPage]);
 
   // Poll every 4s while any visible document is in a processing/pending state
   useEffect(() => {
     const id = setInterval(() => {
       if (!documents.some((d) => PROCESSING_STATUSES.has(d.status))) return;
-      fetchPage(pageRef.current, statusFilter, q);
+      fetchPage(pageRef.current, statusFilter, q, dateRange);
     }, POLL_MS);
     return () => clearInterval(id);
-  }, [documents, fetchPage, statusFilter, q]);
+  }, [documents, fetchPage, statusFilter, q, dateRange]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   function handlePageChange(newPage: number) {
     setPage(newPage);
-    fetchPage(newPage, statusFilter, q);
+    fetchPage(newPage, statusFilter, q, dateRange);
   }
 
   function handleFilterChange(value: string) {
     const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set("status", value);
-    } else {
-      params.delete("status");
-    }
+    if (value) params.set("status", value); else params.delete("status");
     params.delete("page");
     router.replace(`${pathname}?${params.toString()}`);
   }
 
+  function handleDateRangeChange(value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) params.set("date_range", value); else params.delete("date_range");
+    params.delete("page");
+    router.replace(`${pathname}?${params.toString()}`);
+  }
+
+  function toggleCheck(id: string) {
+    setCheckedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  const allChecked = documents.length > 0 && documents.every((d) => checkedIds.has(d.id));
+
   if (documents.length === 0 && page === 0 && !statusFilter && !q) {
     return (
       <div className="rounded-lg border border-dashed border-gray-300 bg-white py-16 text-center">
-        <p className="text-gray-500">No invoices yet.</p>
+        <p className="text-gray-500">{t("noInvoices")}</p>
         <Link href="/upload" className="mt-3 inline-block text-sm text-blue-600 hover:underline">
-          Upload your first PDF
+          {t("uploadFirst")}
         </Link>
       </div>
     );
@@ -330,45 +359,81 @@ export function DocumentsTable({ token, initialDocuments, initialTotal }: Props)
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <h2 className="text-lg font-semibold">
-          Invoices
-          {q && (
-            <span className="ml-2 text-sm font-normal text-gray-500">
-              — results for &ldquo;{q}&rdquo;
+      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+        {/* Table header bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-4 py-3">
+          <div className="flex items-center gap-3">
+            <select
+              value={statusFilter}
+              onChange={(e) => handleFilterChange(e.target.value)}
+              className="rounded border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {ALL_STATUSES.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
+            <select
+              value={dateRange}
+              onChange={(e) => handleDateRangeChange(e.target.value)}
+              className="rounded border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All time</option>
+              <option value="7">Last 7 days</option>
+              <option value="30">Last 30 days</option>
+            </select>
+            <div className="h-4 w-px bg-gray-200" />
+            <span className="text-sm text-gray-400">
+              Showing {documents.length} of {total}
             </span>
-          )}
-        </h2>
-        <div className="flex items-center gap-3">
-          <select
-            value={statusFilter}
-            onChange={(e) => handleFilterChange(e.target.value)}
-            className="rounded border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            {ALL_STATUSES.map((s) => (
-              <option key={s.value} value={s.value}>{s.label}</option>
-            ))}
-          </select>
-          <span className="text-sm text-gray-500">{total} total</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              disabled
+              title="Coming soon"
+              className="flex cursor-not-allowed items-center gap-1.5 rounded border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-400"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Export Report
+            </button>
+            <button
+              disabled
+              title="Coming soon"
+              className="flex cursor-not-allowed items-center gap-1.5 rounded bg-blue-300 px-3 py-1.5 text-sm font-medium text-white"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              Upload Batch
+            </button>
+          </div>
         </div>
-      </div>
 
       {documents.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-gray-300 bg-white py-12 text-center">
+        <div className="py-12 text-center">
           <p className="text-gray-500">
-            {q ? `No documents match "${q}".` : "No documents match the selected filter."}
+            {q ? t("noMatch", { q }) : t("noMatchFilter")}
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+        <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="border-b border-gray-200 bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
               <tr>
-                <th className="px-4 py-3">Filename</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Size</th>
-                <th className="px-4 py-3">Uploaded</th>
-                <th className="px-4 py-3">Actions</th>
+                <th className="px-4 py-3 w-10">
+                  <input
+                    type="checkbox"
+                    checked={allChecked}
+                    onChange={() => setCheckedIds(allChecked ? new Set() : new Set(documents.map((d) => d.id)))}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                </th>
+                <th className="px-4 py-3">{t("filename")}</th>
+                <th className="px-4 py-3">{t("status")}</th>
+                <th className="px-4 py-3">{t("size")}</th>
+                <th className="px-4 py-3">{t("uploaded")}</th>
+                <th className="px-4 py-3">{t("actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -376,7 +441,15 @@ export function DocumentsTable({ token, initialDocuments, initialTotal }: Props)
                 const pct = STATUS_PROGRESS[doc.status] ?? 0;
                 const isProcessing = PROCESSING_STATUSES.has(doc.status);
                 return (
-                  <tr key={doc.id} className="hover:bg-gray-50">
+                  <tr key={doc.id} className={`hover:bg-gray-50 ${checkedIds.has(doc.id) ? "bg-blue-50/40" : ""}`}>
+                    <td className="px-4 py-3 w-10">
+                      <input
+                        type="checkbox"
+                        checked={checkedIds.has(doc.id)}
+                        onChange={() => toggleCheck(doc.id)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                    </td>
                     <td className="px-4 py-3 font-medium">{doc.filename}</td>
                     <td className="px-4 py-3">
                       <StatusBadge documentId={doc.id} status={doc.status} />
@@ -410,7 +483,7 @@ export function DocumentsTable({ token, initialDocuments, initialTotal }: Props)
                             href={`/review/${doc.id}`}
                             className="rounded bg-purple-600 px-3 py-1 text-center text-xs font-medium text-white hover:bg-purple-700"
                           >
-                            Review
+                            {t("review")}
                           </Link>
                         )}
                         {doc.status === "xml_generated" && (
@@ -419,7 +492,7 @@ export function DocumentsTable({ token, initialDocuments, initialTotal }: Props)
                             <SubmitToKsefButton
                               documentId={doc.id}
                               token={token}
-                              onDone={() => fetchPage(page, statusFilter, q)}
+                              onDone={() => fetchPage(page, statusFilter, q, dateRange)}
                             />
                           </>
                         )}
@@ -430,13 +503,13 @@ export function DocumentsTable({ token, initialDocuments, initialTotal }: Props)
                           <RetrySubmissionButton
                             documentId={doc.id}
                             token={token}
-                            onDone={() => fetchPage(page, statusFilter, q)}
+                            onDone={() => fetchPage(page, statusFilter, q, dateRange)}
                           />
                         )}
                         <DeleteButton
                           documentId={doc.id}
                           token={token}
-                          onDone={() => fetchPage(page, statusFilter, q)}
+                          onDone={() => fetchPage(page, statusFilter, q, dateRange)}
                         />
                       </div>
                     </td>
@@ -449,26 +522,27 @@ export function DocumentsTable({ token, initialDocuments, initialTotal }: Props)
       )}
 
       {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between text-sm text-gray-600">
+        <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3 text-sm text-gray-600">
           <button
             onClick={() => handlePageChange(Math.max(0, page - 1))}
             disabled={page === 0}
             className="rounded border border-gray-200 bg-white px-3 py-1.5 hover:bg-gray-50 disabled:opacity-40"
           >
-            Previous
+            {t("previous")}
           </button>
           <span>
-            Page {page + 1} of {totalPages}
+            {t("page", { page: page + 1, total: totalPages })}
           </span>
           <button
             onClick={() => handlePageChange(Math.min(totalPages - 1, page + 1))}
             disabled={page >= totalPages - 1}
             className="rounded border border-gray-200 bg-white px-3 py-1.5 hover:bg-gray-50 disabled:opacity-40"
           >
-            Next
+            {t("next")}
           </button>
         </div>
       )}
+      </div>
     </>
   );
 }
