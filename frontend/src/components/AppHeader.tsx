@@ -163,6 +163,31 @@ export function AppHeader() {
     }
   }
 
+  function parseSearchDate(value: string): { date_from: string; date_to: string } | null {
+    const v = value.trim();
+    // YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return { date_from: v, date_to: v };
+    // YYYY-MM
+    const ym = v.match(/^(\d{4})-(\d{2})$/);
+    if (ym) {
+      const last = new Date(parseInt(ym[1]), parseInt(ym[2]), 0).getDate();
+      return { date_from: `${ym[1]}-${ym[2]}-01`, date_to: `${ym[1]}-${ym[2]}-${String(last).padStart(2, "0")}` };
+    }
+    // MM/YYYY
+    const my = v.match(/^(\d{2})\/(\d{4})$/);
+    if (my) {
+      const last = new Date(parseInt(my[2]), parseInt(my[1]), 0).getDate();
+      return { date_from: `${my[2]}-${my[1]}-01`, date_to: `${my[2]}-${my[1]}-${String(last).padStart(2, "0")}` };
+    }
+    // DD.MM.YYYY
+    const dmy = v.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+    if (dmy) {
+      const iso = `${dmy[3]}-${dmy[2].padStart(2, "0")}-${dmy[1].padStart(2, "0")}`;
+      return { date_from: iso, date_to: iso };
+    }
+    return null;
+  }
+
   function handleSearchChange(value: string) {
     setInputValue(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -171,10 +196,19 @@ export function AppHeader() {
       const params = new URLSearchParams(
         pathname === "/dashboard" ? searchParams.toString() : ""
       );
-      if (value) {
+      const parsed = value ? parseSearchDate(value) : null;
+      if (parsed) {
+        params.delete("q");
+        params.set("date_from", parsed.date_from);
+        params.set("date_to", parsed.date_to);
+      } else if (value) {
         params.set("q", value);
+        params.delete("date_from");
+        params.delete("date_to");
       } else {
         params.delete("q");
+        params.delete("date_from");
+        params.delete("date_to");
       }
       params.delete("page");
       router.replace(`${target}?${params.toString()}`);

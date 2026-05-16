@@ -406,3 +406,109 @@ Reason: The pricing page existed as a marketing page only. No limits were enforc
 Tradeoffs: No payment processing — plan upgrades require manual reassignment by an operator. Counter uses an `UPDATE ... SET docs_uploaded_this_month = docs_uploaded_this_month + 1` (atomic at the DB level) but is not row-locked with the document insert (acceptable for MVP; users won't hit the race condition at small scale).
 
 Follow-up: When payment processing is added (Stripe or Przelewy24), plan_type is updated via webhook on subscription event. The rest of the enforcement logic stays unchanged.
+
+---
+
+## DEC-024: Settings > Usage page — layout isolation fix
+
+Date: 2026-05-16
+Status: accepted
+
+Decision: `frontend/src/app/settings/usage/page.tsx` was rendering its own `<AppHeader>`, `<SettingsNav>`, back-link, and outer `min-h-screen` wrapper — but `settings/layout.tsx` already provides all of that for every settings sub-page. Fixed by stripping the shell so the page returns only its content cards (matching `account/page.tsx`). The `monthly_reset_at` date display was also fixed: the column stores when the counter *last reset*, not when it will *next* reset — now adds 1 month before formatting.
+
+Reason: The page was rendering a full second app shell inside the layout's `{children}` slot, producing a visually broken "settings within settings" appearance.
+
+Tradeoffs: None.
+
+Follow-up: None.
+
+---
+
+## DEC-025: Homepage enhancement — benefits strip, pricing preview, bottom CTA
+
+Date: 2026-05-16
+Status: accepted
+
+Decision: The root landing page (`/`) was a thin hero + 3 feature blocks. Added three new sections below the features:
+1. **Benefits strip** (white bg): 3 cards — reduced manual labor, fewer errors, KSeF compliance.
+2. **Pricing preview** (gray bg): compact 4-plan grid (Testing/Starter/Growth/Enterprise) with price and doc limit; Growth highlighted; "See all plans →" links to `/pricing`.
+3. **Bottom CTA** (blue bg): "Ready to connect your invoices to KSeF?" with a second "Get started free" button that scrolls smoothly back to the hero section (using `id="hero"` + `href="#hero"`). `scroll-smooth` added to `<html>` in `layout.tsx` for site-wide smooth scrolling.
+
+New translation keys added to `Landing` namespace in both `en.json` and `pl.json`.
+
+Reason: Visitors who landed on `/` and didn't navigate to `/pricing` or `/about` never saw the benefits, pricing, or a clear registration path.
+
+Tradeoffs: Pricing preview plan names are hardcoded strings (capitalised key names), not translated — only the price/limit text is i18n'd.
+
+Follow-up: None.
+
+---
+
+## DEC-026: Validation pages — Sidebar missing
+
+Date: 2026-05-16
+Status: accepted
+
+Decision: `frontend/src/app/validation/page.tsx` and `frontend/src/app/validation/[id]/page.tsx` were missing `<Sidebar />` import and `pl-20` padding on `<main>`. Added both to match the dashboard pattern.
+
+Reason: The sidebar icon strip was absent on the validation queue and validation detail pages.
+
+Tradeoffs: None.
+
+Follow-up: None.
+
+---
+
+## DEC-027: Date search in top search bar
+
+Date: 2026-05-16
+Status: accepted
+
+Decision: The AppHeader search bar now detects date patterns typed by the user and converts them to date-range URL params instead of text search. Supported formats: `YYYY-MM-DD` (exact day), `YYYY-MM` or `MM/YYYY` (full month), `DD.MM.YYYY` (Polish format). When a date is detected, URL gets `?date_from=YYYY-MM-DD&date_to=YYYY-MM-DD` and `q` is cleared. Otherwise behaves as before.
+
+Backend: `GET /api/v1/documents` gained a `date_to: date | None` query param. `list_by_company()` filters `Document.created_at < date_to + timedelta(days=1)` so the full last day is included. `DocumentsTable` reads `date_from`/`date_to` URL params explicitly (takes priority over the existing `date_range` dropdown).
+
+Search placeholder updated in both locales to hint at date format: "Search invoices, contractors, dates (2026-05)…".
+
+Reason: The only way to filter by a specific date was the 7/30-day dropdown — there was no way to find documents from a specific day or month.
+
+Tradeoffs: Date detection is purely syntactic (no semantic NLP). Polish month names (e.g. "maj 2026") are not supported — only numeric formats.
+
+Follow-up: None.
+
+---
+
+## DEC-028: Archive page — backend endpoint + frontend page
+
+Date: 2026-05-16
+Status: accepted
+
+Decision: Added `GET /api/v1/documents/archive` endpoint that returns documents with status `accepted` or `rejected`, joined with `InvoiceDraft` (seller_name, seller_nip, gross_total) and `KsefSubmission` (ksef_number). Response shape: `ArchiveOut` with `items: ArchiveItemOut[]`, `total`, `accepted_count`, `rejected_count`, `storage_bytes`. Supports `limit`, `offset`, and `q` (text search on filename, seller_name, buyer_name, invoice_number).
+
+Frontend page `frontend/src/app/archive/page.tsx` is complete: table-first layout (Date / KSeF ID / Contractor+NIP / Value / Status badge / PDF+XML download buttons), stat cards below (Total Accepted, Total Rejected, Archived Storage with cloud icon), numbered pagination with ellipsis. Uses Material Symbols icon buttons for downloads.
+
+Reason: The sidebar has an "Archive" link pointing to `/archive` — both backend and frontend are now fully built.
+
+Follow-up: None.
+
+---
+
+## DEC-029: Deployment — Railway (MVP) + consolidated worker service
+
+Date: 2026-05-16
+Status: accepted
+
+Decision: For MVP, the application is deployed across three platforms:
+- **Vercel** — Next.js frontend (free tier, already in use)
+- **Supabase** — Postgres + Auth + Storage (free tier, already in use)
+- **Railway** — FastAPI backend + all workers + Redis
+
+On Railway, all 5 Python workers (`ocr_worker`, `extraction_worker`, `fa3_xml_worker`, `ksef_submission_worker`, `ksef_upo_polling_worker`) are consolidated into a single Railway service managed by `supervisord`, rather than 5 separate services. This reduces the service count from 7 to 3 (backend + combined workers + Redis), keeping total RAM consumption within Railway's free-tier limits (0.5 GB per service).
+
+Functionally, nothing changes: each worker still runs as an independent Python process with its own Redis queue. `supervisord` starts all 5 and auto-restarts any that crash — equivalent to Railway restarting a crashed service. The workers have no shared state; multi-tenant isolation is enforced at the data layer as before (DEC-019).
+
+Reason: The project needs always-on background workers (Redis queue consumers), which rules out serverless platforms. Railway is the lowest-friction managed option that supports Docker-based multi-service deployments with free HTTPS subdomains. Consolidating workers into one service fits the free tier and avoids ~$10–15/month in per-service billing during the hypothesis-testing phase.
+
+Tradeoffs: If the combined worker container hits the 0.5 GB RAM ceiling all 5 workers restart together. At MVP load (workers idle most of the time), this is acceptable. If one worker type sees disproportionate load in the future, it can be split back out into its own Railway service without changing any worker logic.
+
+Follow-up: When revenue justifies it, split high-throughput workers (likely OCR and extraction) into dedicated services with larger memory allocations. If Railway costs grow beyond ~$20/month, migrate workers to a Hetzner VPS running docker-compose (the existing `docker-compose.yml` already supports this without code changes).

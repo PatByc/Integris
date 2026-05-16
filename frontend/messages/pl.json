@@ -10,17 +10,33 @@
     "alreadyHaveAccount": "Masz już konto?",
     "newHere": "Nowy użytkownik?",
     "getStartedFree": "Rozpocznij za darmo",
-    "heroTitle": "KSeF workflow automation for legacy ERP systems",
-    "heroSubtitle": "Extract invoice data, validate workflows and submit compliant XML to KSeF — without replacing your existing ERP.",
-    "feature1Title": "OCR + Ekstrakcja AI",
+    "heroTitle": "Automatyzacja KSeF dla starszych systemów ERP",
+    "heroSubtitle": "Wyciągaj dane z faktur, waliduj procesy i wysyłaj zgodne XML-e do KSeF — bez konieczności migracji ERP.",
+    "feature1Title": "OCR + ekstrakcja AI",
     "feature1Body": "Prześlij dowolną fakturę PDF. Google Vision OCR odczytuje tekst, AI normalizuje go do ustrukturyzowanych pól faktury — sprzedawca, nabywca, pozycje, sumy.",
     "feature2Title": "Weryfikacja ludzka",
     "feature2Body": "Każda faktura przechodzi przez ekran weryfikacji. Popraw błędy ekstrakcji przed zatwierdzeniem — AI wspomaga, człowiek zatwierdza.",
     "feature3Title": "Wysyłka do KSeF",
     "feature3Body": "Zatwierdzone faktury są deterministycznie konwertowane do XML FA(3) i przesyłane do KSeF. Pełna ścieżka audytu i potwierdzenie UPO.",
-    "footer": "© 2026 Integris · middleware faktur KSeF",
+    "footer": "© 2026 Integris · warstwa pośrednia faktur KSeF",
     "termsLink": "Warunki korzystania",
-    "privacyLink": "Polityka prywatności i cookies"
+    "privacyLink": "Polityka prywatności i cookies",
+    "benefitsTitle": "Co zyskujesz",
+    "benefit1Title": "Mniej pracy manualnej",
+    "benefit1Body": "Zautomatyzuj przyjmowanie faktur, ekstrakcję danych i wysyłkę do KSeF — oszczędzając czas działu księgowości.",
+    "benefit2Title": "Mniej błędów operacyjnych",
+    "benefit2Body": "Ustrukturyzowana walidacja i weryfikacja przez człowieka przed każdą wysyłką do KSeF eliminuje ręczne błędy danych.",
+    "benefit3Title": "Zgodność z KSeF — bez migracji ERP",
+    "benefit3Body": "Podłącz istniejący system ERP lub oprogramowanie księgowe do KSeF bez kosztownej wymiany platformy.",
+    "pricingPreviewTitle": "Przejrzyste ceny",
+    "pricingFree": "Bezpłatnie",
+    "pricingCustom": "Cena indywidualna",
+    "pricingPerMonth": "PLN / mies.",
+    "pricingDocs": "{n} dok. / miesiąc",
+    "pricingDocsUnlimited": "Bez limitu",
+    "seePricingDetails": "Zobacz wszystkie plany →",
+    "ctaTitle": "Gotowy połączyć faktury z KSeF?",
+    "ctaSubtitle": "Bez konieczności migracji ERP. Zacznij przetwarzać faktury w kilka minut."
   },
   "CookieBanner": {
     "text": "Ta strona używa plików cookies do zapamiętania języka i sesji logowania. Korzystając ze strony, akceptujesz ich użycie. Szczegóły znajdziesz w",
@@ -47,11 +63,11 @@
     "nip": "NIP",
     "nipHint": "10-cyfrowy polski identyfikator podatkowy",
     "choosePlan": "Wybierz plan",
-    "planTestingLabel": "Testing",
+    "planTestingLabel": "Testowy",
     "planTestingDesc": "Bezpłatnie · faza MVP · 25 dokumentów/miesiąc",
     "planStarterLabel": "Starter",
     "planStarterDesc": "499 PLN/miesiąc · 200 dokumentów/miesiąc",
-    "planGrowthLabel": "Growth",
+    "planGrowthLabel": "Rozwój",
     "planGrowthDesc": "2 499 PLN/miesiąc · 1 000 dokumentów/miesiąc",
     "planEnterpriseLabel": "Enterprise",
     "planEnterpriseDesc": "Ceny indywidualne · bez limitu",
@@ -74,7 +90,7 @@
     "account": "Konto",
     "organizationProfile": "Profil organizacji",
     "apiCredentials": "Klucze API",
-    "searchPlaceholder": "Szukaj faktur, plików lub kontrahentów…",
+    "searchPlaceholder": "Szukaj faktur, kontrahentów, dat (2026-05)…",
     "notifications": "Powiadomienia",
     "allCaughtUp": "Wszystko przeczytane",
     "settings": "Ustawienia",
@@ -87,7 +103,7 @@
     "logOut": "Wyloguj się",
     "roleAdmin": "Administrator",
     "roleMember": "Członek",
-    "roleViewer": "Widz",
+    "roleViewer": "Podgląd",
     "usage": "Użycie",
     "upgradePlan": "Zmień plan",
     "justNow": "przed chwilą",
@@ -220,7 +236,7 @@
     "addLineItem": "+ Dodaj pozycję",
     "approving": "Zatwierdzanie…",
     "approveInvoice": "Zatwierdź fakturę",
-    "viewerCannotApprove": "Użytkownicy z rolą Widz nie mogą zatwierdzać faktur.",
+    "viewerCannotApprove": "Użytkownicy z rolą Podgląd nie mogą zatwierdzać faktur.",
     "resolveErrors": "Rozwiąż wszystkie błędy walidacji, aby zatwierdzić.",
     "approvalFailed": "Zatwierdzenie nieudane",
     "noValidationErrors": "Brak błędów walidacji",
@@ -270,7 +286,7 @@
     "step4Title": "Generowanie XML FA(3)",
     "step4Body": "Po zatwierdzeniu Integris deterministycznie generuje plik XML FA(3) z zatwierdzonych danych. AI nie jest używane na tym etapie.",
     "step5Title": "Wysyłka do KSeF",
-    "step5Body": "XML jest przesyłany do KSeF. Integris odpytuje o potwierdzenie UPO i aktualizuje status dokumentu. UPO można pobrać ze ścieżki audytu.",
+    "step5Body": "XML jest przesyłany do KSeF. Integris sprawdza potwierdzenie UPO i aktualizuje status dokumentu. UPO można pobrać ze ścieżki audytu.",
     "faq1Q": "Czy AI może się mylić?",
     "faq1A": "Tak. OCR i ekstrakcja AI mogą zawierać błędy, szczególnie w przypadku skanowanych lub słabej jakości plików PDF. Zawsze weryfikuj wyekstrahowane pola przed zatwierdzeniem.",
     "faq2Q": "Co się dzieje, gdy KSeF odrzuci fakturę?",
@@ -278,7 +294,7 @@
     "faq3Q": "Czy XML FA(3) jest generowany przez AI?",
     "faq3A": "Nie. XML jest generowany przez deterministyczny algorytm z zatwierdzonych danych. AI jest używane tylko do ekstrakcji tekstu, nigdy do końcowego XML.",
     "faq4Q": "Które środowisko KSeF jest aktywne?",
-    "faq4A": "Jest to kontrolowane przez konfigurację serwera (KSEF_ENV). Skontaktuj się z administratorem, aby potwierdzić tryb (dry-run, sandbox lub produkcja)."
+    "faq4A": "Jest to kontrolowane przez konfigurację serwera (KSEF_ENV). Skontaktuj się z administratorem, aby potwierdzić tryb (testowy, środowisko testowe lub produkcja)."
   },
   "Settings": {
     "title": "Ustawienia",
@@ -321,11 +337,11 @@
     "memberManagement": "Zarządzanie członkami będzie dostępne w przyszłej wersji.",
     "roleAdmin": "Administrator",
     "roleMember": "Członek",
-    "roleViewer": "Widz",
+    "roleViewer": "Podgląd",
     "aiProvider": "Dostawca AI",
     "aiProviderDesc": "Używany do ekstrakcji pól faktury z tekstu OCR",
-    "integrisMode": "integris",
-    "externalMode": "zewnętrzny",
+    "integrisMode": "Integris",
+    "externalMode": "Zewnętrzny",
     "provider": "Dostawca",
     "model": "Model",
     "apiKeyManagedByIntegris": "Klucz API zarządzany przez Integris. Przełącz na Zewnętrzny, aby użyć własnego klucza.",
@@ -353,9 +369,9 @@
     "docsUsedUnlimited": "{used} dokumentów (bez limitu)",
     "resetsOn": "Resetuje się",
     "upgradeNotice": "Ulepsz plan, aby zwiększyć limit dokumentów.",
-    "planTesting": "Testing",
+    "planTesting": "Testowy",
     "planStarter": "Starter",
-    "planGrowth": "Growth",
+    "planGrowth": "Rozwój",
     "planEnterprise": "Enterprise",
     "planDescTesting": "Faza MVP · 25 dokumentów/miesiąc · brak SLA",
     "planDescStarter": "Małe firmy · 200 dokumentów/miesiąc",
@@ -369,14 +385,14 @@
     "hero": {
       "badge": "Cennik",
       "title": "Infrastruktura operacyjna — nie oprogramowanie do faktur",
-      "subtitle": "Integris to middleware zgodności z KSeF dla firm, które nie mogą lub nie chcą wymieniać ERP. Ceny odzwierciedlają wartość operacyjną — mniej pracy ręcznej, mniej błędów i bezproblemowa zgodność z KSeF.",
-      "note": "Aktualnie w fazie onboardingu — obowiązują ceny dla early adopters."
+      "subtitle": "Integris to warstwa pośrednia zgodności z KSeF dla firm, które nie mogą lub nie chcą wymieniać ERP. Ceny odzwierciedlają wartość operacyjną — mniej pracy ręcznej, mniej błędów i bezproblemowa zgodność z KSeF.",
+      "note": "Aktualnie w fazie onboardingu — obowiązują ceny dla wczesnych użytkowników."
     },
     "testing": {
       "label": "Testowy",
       "tempBadge": "Tymczasowy · faza MVP",
       "description": "Dostępny wyłącznie w fazie MVP. Mocno ograniczony — przeznaczony do oceny produktu przed formalnym onboardingiem. Brak SLA, brak gwarancji produkcyjnych.",
-      "features": ["Wysyłka KSeF (dry-run)", "Przesyłanie PDF", "OCR + ekstrakcja AI", "Podstawowa walidacja", "Dzienniki audytu", "1 użytkownik", "Do 10 faktur/miesiąc"],
+      "features": ["Wysyłka KSeF (tryb testowy)", "Przesyłanie PDF", "OCR + ekstrakcja AI", "Podstawowa walidacja", "Dzienniki audytu", "1 użytkownik", "Do 10 faktur/miesiąc"],
       "price": "Bezpłatny",
       "priceNote": "W fazie MVP",
       "cta": "Poproś o dostęp →"
@@ -386,18 +402,18 @@
       "target": "Małe firmy i przepływy Excel",
       "regularPrice": "1 000 PLN / miesiąc",
       "unit": "PLN / mies.",
-      "badge": "Cena dla early adopters",
+      "badge": "Cena dla wczesnych użytkowników",
       "limit": "Do 50 faktur / miesiąc · Obowiązuje polityka dozwolonego użycia",
       "features": ["Wysyłka KSeF", "Przesyłanie faktur PDF", "OCR + ekstrakcja AI", "Generowanie XML FA(3)", "Podstawowa walidacja", "Dzienniki audytu", "Podstawowy panel", "Wsparcie e-mail"],
       "cta": "Zacznij →"
     },
     "growth": {
-      "label": "Growth",
+      "label": "Rozwój",
       "popular": "Najpopularniejszy",
       "target": "Rosnące MŚP i półautomatyczne zespoły księgowe",
       "regularPrice": "5 000 PLN / miesiąc",
       "unit": "PLN / mies.",
-      "badge": "Cena dla early adopters",
+      "badge": "Cena dla wczesnych użytkowników",
       "limit": "Do 300 faktur / miesiąc · Obowiązuje polityka dozwolonego użycia",
       "featuresHeader": "Wszystko ze Starter, plus:",
       "features": ["Zaawansowane reguły walidacji", "Automatyzacja przepływów", "Przepływy zatwierdzania", "Dostęp wielu użytkowników i uprawnienia ról", "Dostęp API", "Integracje ERP", "Wykrywanie anomalii", "Priorytetowe wsparcie"],
@@ -405,11 +421,11 @@
     },
     "enterprise": {
       "label": "Enterprise",
-      "target": "Firmy średniego rynku i środowiska legacy ERP",
+      "target": "Firmy średniego rynku i środowiska starszych systemów ERP",
       "customPrice": "Niestandardowa",
       "pricing": "wycena",
       "pricingNote": "Niestandardowy wolumen · SLA · Dedykowane wsparcie",
-      "features": ["Niestandardowe integracje ERP", "Gwarancja SLA", "Dedykowany onboarding", "Zaawansowane ścieżki audytu", "Niestandardowa orkiestracja przepływów", "Wsparcie przeglądu bezpieczeństwa", "Opcje wdrożenia on-prem / private", "Zaawansowane raportowanie", "Niestandardowa logika automatyzacji", "Dedykowane wsparcie klienta"],
+      "features": ["Niestandardowe integracje ERP", "Gwarancja SLA", "Dedykowany onboarding", "Zaawansowane ścieżki audytu", "Niestandardowa orkiestracja przepływów", "Wsparcie przeglądu bezpieczeństwa", "Opcje wdrożenia lokalnego / prywatnego", "Zaawansowane raportowanie", "Niestandardowa logika automatyzacji", "Dedykowane wsparcie klienta"],
       "cta": "Porozmawiaj z nami →"
     },
     "roi": [
@@ -442,7 +458,7 @@
       "realityBody": "Większość firm korzysta z przestarzałych systemów ERP, arkuszy Excel lub oprogramowania księgowego, które nigdy nie było zaprojektowane do obsługi KSeF. Pełna migracja platformy jest kosztowna, destrukcyjna i często zbędna. Istniejący system działa — potrzebuje jedynie zgodnej warstwy wyjściowej."
     },
     "what": {
-      "body": "Integris to warstwa middleware między Twoim istniejącym procesem obsługi faktur a KSeF. Przyjmuje faktury PDF, wyodrębnia dane strukturalne za pomocą OCR i AI, waliduje je, kieruje przez weryfikację ludzką, deterministycznie generuje zgodny XML FA(3) i przesyła do KSeF — bez ingerencji w Twój ERP."
+      "body": "Integris to warstwa pośrednia między Twoim istniejącym procesem obsługi faktur a KSeF. Przyjmuje faktury PDF, wyodrębnia dane strukturalne za pomocą OCR i AI, waliduje je, kieruje przez weryfikację ludzką, deterministycznie generuje zgodny XML FA(3) i przesyła do KSeF — bez ingerencji w Twój ERP."
     },
     "principles": {
       "sectionLabel": "Jak budujemy",
@@ -457,11 +473,11 @@
         },
         {
           "title": "Pełna audytowalność",
-          "body": "Każde przesłanie, korekta, zatwierdzenie i wysyłka są zapisywane w niezmiennym dzienniku audytu. System jest transparentny z założenia — nie jako afterthought."
+          "body": "Każde przesłanie, korekta, zatwierdzenie i wysyłka są zapisywane w niezmiennym dzienniku audytu. System jest transparentny od podstaw — nie jako dodatek."
         },
         {
           "title": "Ścisła izolacja danych",
-          "body": "Każdy dokument należy do dokładnie jednej firmy. Izolacja multi-tenant jest egzekwowana na poziomie architektury — nie przez konwencje ani polityki."
+          "body": "Każdy dokument należy do dokładnie jednej firmy. Izolacja wielu organizacji jest egzekwowana na poziomie architektury — nie przez konwencje ani polityki."
         }
       ]
     },
@@ -472,48 +488,48 @@
     },
     "cta": {
       "title": "Gotowy połączyć faktury z KSeF?",
-      "subtitle": "Nie wymagana migracja ERP. Zacznij przetwarzać faktury w ciągu minut.",
+      "subtitle": "Bez konieczności migracji ERP. Zacznij przetwarzać faktury w kilka minut.",
       "getStarted": "Zacznij za darmo",
       "seePricing": "Zobacz cennik"
     }
   },
   "Security": {
     "hero": {
-      "title": "AI Governance & Regulatory Readiness",
-      "subtitle": "Integris został zaprojektowany z myślą o transparentnych workflowach AI, kontroli użytkownika oraz auditability wymaganych przez nowoczesne środowiska enterprise i rozwijające się regulacje UE dotyczące systemów AI, w tym AI Act."
+      "title": "Ład AI i gotowość regulacyjna",
+      "subtitle": "Integris został zaprojektowany z myślą o transparentnych procesach AI, kontroli użytkownika oraz audytowalności wymaganych przez nowoczesne środowiska korporacyjne i rozwijające się regulacje UE dotyczące systemów AI, w tym AI Act."
     },
     "sections": [
       {
         "title": "Człowiek w pętli decyzyjnej",
         "body": "Integris nie wykonuje autonomicznych operacji księgowych bez kontroli użytkownika.",
-        "bullets": ["Zatwierdzanie danych przed dalszym przetwarzaniem", "Review każdego dokumentu przez operatora", "Wymagana akceptacja przed wysyłką do KSeF", "Pełna kontrola operacyjna po stronie użytkownika"]
+        "bullets": ["Zatwierdzanie danych przed dalszym przetwarzaniem", "Weryfikacja każdego dokumentu przez operatora", "Wymagana akceptacja przed wysyłką do KSeF", "Pełna kontrola operacyjna po stronie użytkownika"]
       },
       {
         "title": "Dzienniki audytu i historia operacji",
         "body": "Każda operacja w systemie jest zapisana i możliwa do zweryfikowania w dowolnym momencie.",
-        "bullets": ["Pełne ścieżki audytowe dla każdego dokumentu", "Historia zmian z przypisaniem do użytkownika", "Monitoring wszystkich etapów workflowu", "Transparentność operacyjna na poziomie enterprise"]
+        "bullets": ["Pełne ścieżki audytowe dla każdego dokumentu", "Historia zmian z przypisaniem do użytkownika", "Monitoring wszystkich etapów procesu", "Transparentność operacyjna na poziomie korporacyjnym"]
       },
       {
         "title": "Przepływy wspomagane AI",
         "body": "AI w Integris wspiera ekstrakcję i walidację danych. System nie podejmuje autonomicznych decyzji biznesowych ani księgowych bez udziału użytkownika.",
-        "bullets": ["AI używane wyłącznie do ekstrakcji i normalizacji danych", "Każdy wynik AI wymaga weryfikacji przez człowieka", "Deterministyczna generacja XML — bez udziału AI", "Confidence score widoczny dla operatora przy każdym dokumencie"]
+        "bullets": ["AI używane wyłącznie do ekstrakcji i normalizacji danych", "Każdy wynik AI wymaga weryfikacji przez człowieka", "Deterministyczna generacja XML — bez udziału AI", "Poziom pewności widoczny dla operatora przy każdym dokumencie"]
       },
       {
         "title": "Bezpieczeństwo danych",
         "body": "Integris wykorzystuje nowoczesne mechanizmy bezpieczeństwa na każdym etapie przetwarzania dokumentów.",
-        "bullets": ["Szyfrowanie komunikacji (TLS) end-to-end", "Kontrola dostępu oparta na rolach (owner / operator / viewer)", "Separacja danych między organizacjami (multi-tenant)", "Bezpieczne przechowywanie dokumentów PDF w izolowanym storage"]
+        "bullets": ["Szyfrowanie komunikacji (TLS) end-to-end", "Kontrola dostępu oparta na rolach (właściciel / operator / podgląd)", "Separacja danych między organizacjami", "Bezpieczne przechowywanie dokumentów PDF w izolowanym magazynie danych"]
       },
       {
         "title": "Gotowość na wymagania enterprise",
-        "body": "Architektura Integris jest projektowana z myślą o środowiskach enterprise i wymaganiach regulacyjnych.",
-        "bullets": ["Workflowy w pełni audytowalne i powtarzalne", "Zgodność z wymogami KSeF (polska e-faktura)", "Transparentność operacyjna wymagana przez środowiska regulated", "Projektowane pod nowoczesne standardy AI governance"]
+        "body": "Architektura Integris jest projektowana z myślą o środowiskach korporacyjnych i wymaganiach regulacyjnych.",
+        "bullets": ["Procesy w pełni audytowalne i powtarzalne", "Zgodność z wymogami KSeF (polska e-faktura)", "Transparentność operacyjna wymagana przez regulowane środowiska", "Projektowane pod nowoczesne standardy ładu AI"]
       },
       {
         "title": "Transparentne operacje AI",
-        "body": "Workflowy AI w Integris są projektowane tak, aby użytkownik miał pełną widoczność i kontrolę na każdym etapie.",
-        "bullets": ["Widoczny wynik ekstrakcji przed zatwierdzeniem", "Możliwość korekty każdego pola przed wysyłką", "Confidence score i flagi walidacyjne dostępne dla operatora", "Żadna operacja nie jest ukryta przed użytkownikiem"]
+        "body": "Procesy AI w Integris są projektowane tak, aby użytkownik miał pełną widoczność i kontrolę na każdym etapie.",
+        "bullets": ["Widoczny wynik ekstrakcji przed zatwierdzeniem", "Możliwość korekty każdego pola przed wysyłką", "Poziom pewności i flagi walidacyjne dostępne dla operatora", "Żadna operacja nie jest ukryta przed użytkownikiem"]
       }
     ],
-    "footer": "Architektura Integris jest projektowana pod kontrolę, bezpieczeństwo i enterprise governance — nie jako deklaracja, ale jako właściwość systemu."
+    "footer": "Architektura Integris jest projektowana pod kontrolę, bezpieczeństwo i ład korporacyjny — nie jako deklaracja, ale jako właściwość systemu."
   }
 }

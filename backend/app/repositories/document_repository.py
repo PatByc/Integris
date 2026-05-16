@@ -170,6 +170,51 @@ async def get_validation_queue(db: AsyncSession, company_id: UUID) -> dict:
     }
 
 
+async def list_submission_queue(db: AsyncSession, company_id: UUID) -> dict:
+    QUEUE_STATUSES = ("xml_generated", "rejected")
+
+    rows = await db.execute(
+        select(
+            Document.id,
+            Document.filename,
+            Document.status,
+            Document.updated_at,
+            InvoiceDraft.seller_name,
+            InvoiceDraft.seller_nip,
+            InvoiceDraft.invoice_number,
+            InvoiceDraft.gross_total,
+        )
+        .select_from(Document)
+        .outerjoin(InvoiceDraft, InvoiceDraft.document_id == Document.id)
+        .where(Document.company_id == company_id, Document.status.in_(QUEUE_STATUSES))
+        .order_by(Document.updated_at.desc())
+    )
+    items = rows.all()
+
+    total_value = sum(
+        float(r.gross_total) for r in items
+        if r.status == "xml_generated" and r.gross_total is not None
+    )
+
+    return {
+        "items": [
+            {
+                "id": r.id,
+                "filename": r.filename,
+                "status": r.status,
+                "updated_at": r.updated_at,
+                "seller_name": r.seller_name,
+                "seller_nip": r.seller_nip,
+                "invoice_number": r.invoice_number,
+                "gross_total": float(r.gross_total) if r.gross_total is not None else None,
+            }
+            for r in items
+        ],
+        "total": len(items),
+        "total_value": round(total_value, 2),
+    }
+
+
 async def list_by_company(
     db: AsyncSession,
     company_id: UUID,
@@ -178,12 +223,15 @@ async def list_by_company(
     status: str | None = None,
     q: str | None = None,
     date_from: date | None = None,
+    date_to: date | None = None,
 ) -> tuple[list[Document], int]:
     base = select(Document).where(Document.company_id == company_id)
     if status:
         base = base.where(Document.status == status)
     if date_from:
         base = base.where(Document.created_at >= date_from)
+    if date_to:
+        base = base.where(Document.created_at < date_to + timedelta(days=1))
     if q:
         pattern = f"%{q}%"
         base = base.outerjoin(

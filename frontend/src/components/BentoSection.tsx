@@ -72,32 +72,49 @@ export function BentoSection({ token }: { token: string }) {
         <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-gray-400">
           Documents — last 7 days
         </p>
-        <div className="flex h-24 items-end gap-1.5">
-          {docs_per_day.map(({ date, count }) => {
-            const heightPx = Math.max(
-              Math.round((count / maxCount) * BAR_HEIGHT_PX),
-              count > 0 ? 8 : 3,
-            );
-            return (
-              <div key={date} className="flex flex-1 flex-col items-center">
-                <div
-                  className="w-full rounded-sm transition-all"
-                  style={{
-                    height: `${heightPx}px`,
-                    backgroundColor: count > 0 ? "#2563eb" : "#e5e7eb",
-                  }}
-                  title={`${count} document${count !== 1 ? "s" : ""}`}
-                />
-              </div>
-            );
-          })}
-        </div>
-        <div className="mt-1.5 flex gap-1.5">
-          {docs_per_day.map(({ date }) => (
-            <div key={date} className="flex-1 text-center text-xs text-gray-400">
-              {DAY_LABELS[new Date(date + "T12:00:00").getDay()]}
+        <div className="flex gap-2">
+          {/* Y-axis ticks */}
+          <div
+            className="flex flex-col justify-between text-right shrink-0"
+            style={{ height: BAR_HEIGHT_PX, width: 24 }}
+          >
+            <span className="text-[10px] leading-none text-gray-400">{maxCount}</span>
+            {maxCount > 2 && (
+              <span className="text-[10px] leading-none text-gray-400">{Math.round(maxCount / 2)}</span>
+            )}
+            <span className="text-[10px] leading-none text-gray-400">0</span>
+          </div>
+
+          {/* Bars + day labels */}
+          <div className="flex flex-1 flex-col">
+            <div className="flex items-end gap-1.5" style={{ height: BAR_HEIGHT_PX }}>
+              {docs_per_day.map(({ date, count }) => {
+                const heightPx = Math.max(
+                  Math.round((count / maxCount) * BAR_HEIGHT_PX),
+                  count > 0 ? 8 : 3,
+                );
+                return (
+                  <div key={date} className="flex flex-1 flex-col items-center">
+                    <div
+                      className="w-full rounded-sm transition-all"
+                      style={{
+                        height: `${heightPx}px`,
+                        backgroundColor: count > 0 ? "#2563eb" : "#e5e7eb",
+                      }}
+                      title={`${count} document${count !== 1 ? "s" : ""}`}
+                    />
+                  </div>
+                );
+              })}
             </div>
-          ))}
+            <div className="mt-1.5 flex gap-1.5">
+              {docs_per_day.map(({ date }) => (
+                <div key={date} className="flex-1 text-center text-xs text-gray-400">
+                  {DAY_LABELS[new Date(date + "T12:00:00").getDay()]}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 

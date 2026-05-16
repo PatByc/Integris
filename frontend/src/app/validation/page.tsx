@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AppHeader } from "@/components/AppHeader";
+import { Sidebar } from "@/components/Sidebar";
 import { apiGet } from "@/lib/api";
 
 const ERROR_META: Record<string, { label: string; critical: boolean }> = {
@@ -76,8 +77,9 @@ export default function ValidationPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <AppHeader />
+      <Sidebar />
 
-      <main className="mx-auto max-w-6xl px-6 py-8">
+      <main className="mx-auto max-w-6xl px-6 py-8 pl-20">
         {/* Header */}
         <div className="mb-6 flex items-end justify-between">
           <div>
@@ -92,9 +94,6 @@ export default function ValidationPage() {
               </p>
             )}
           </div>
-          <Link href="/dashboard" className="text-sm text-blue-600 hover:underline">
-            Back to Dashboard
-          </Link>
         </div>
 
         {/* Stats */}

@@ -250,6 +250,8 @@ export function DocumentsTable({ token, initialDocuments, initialTotal }: Props)
   const q = searchParams.get("q") ?? "";
   const statusFilter = searchParams.get("status") ?? "";
   const dateRange = searchParams.get("date_range") ?? "";
+  const explicitDateFrom = searchParams.get("date_from") ?? "";
+  const explicitDateTo = searchParams.get("date_to") ?? "";
 
   const [documents, setDocuments] = useState<DocumentItem[]>(initialDocuments);
   const [total, setTotal] = useState(initialTotal);
@@ -272,7 +274,7 @@ export function DocumentsTable({ token, initialDocuments, initialTotal }: Props)
     { value: "rejected", label: t("rejected") },
   ];
 
-  const fetchPage = useCallback(async (p: number, filter: string, query: string, range: string) => {
+  const fetchPage = useCallback(async (p: number, filter: string, query: string, range: string, dateFrom: string, dateTo: string) => {
     try {
       const params = new URLSearchParams({
         limit: String(PAGE_SIZE),
@@ -280,10 +282,13 @@ export function DocumentsTable({ token, initialDocuments, initialTotal }: Props)
       });
       if (filter) params.set("status", filter);
       if (query) params.set("q", query);
-      if (range) {
+      if (dateFrom) {
+        params.set("date_from", dateFrom);
+        if (dateTo) params.set("date_to", dateTo);
+      } else if (range) {
         const days = parseInt(range);
-        const dateFrom = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-        params.set("date_from", dateFrom.toISOString().split("T")[0]);
+        const df = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+        params.set("date_from", df.toISOString().split("T")[0]);
       }
       const res = await fetch(`${API_URL}/api/v1/documents?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -296,21 +301,21 @@ export function DocumentsTable({ token, initialDocuments, initialTotal }: Props)
   }, [token]);
 
   // Refetch and reset page whenever URL filters change
-  const prevFiltersRef = useRef({ q, statusFilter, dateRange });
+  const prevFiltersRef = useRef({ q, statusFilter, dateRange, explicitDateFrom, explicitDateTo });
   useEffect(() => {
     const prev = prevFiltersRef.current;
-    if (prev.q !== q || prev.statusFilter !== statusFilter || prev.dateRange !== dateRange) {
-      prevFiltersRef.current = { q, statusFilter, dateRange };
+    if (prev.q !== q || prev.statusFilter !== statusFilter || prev.dateRange !== dateRange || prev.explicitDateFrom !== explicitDateFrom || prev.explicitDateTo !== explicitDateTo) {
+      prevFiltersRef.current = { q, statusFilter, dateRange, explicitDateFrom, explicitDateTo };
       setPage(0);
-      fetchPage(0, statusFilter, q, dateRange);
+      fetchPage(0, statusFilter, q, dateRange, explicitDateFrom, explicitDateTo);
     }
-  }, [q, statusFilter, dateRange, fetchPage]);
+  }, [q, statusFilter, dateRange, explicitDateFrom, explicitDateTo, fetchPage]);
 
   // Poll every 4s while any visible document is in a processing/pending state
   useEffect(() => {
     const id = setInterval(() => {
       if (!documents.some((d) => PROCESSING_STATUSES.has(d.status))) return;
-      fetchPage(pageRef.current, statusFilter, q, dateRange);
+      fetchPage(pageRef.current, statusFilter, q, dateRange, explicitDateFrom, explicitDateTo);
     }, POLL_MS);
     return () => clearInterval(id);
   }, [documents, fetchPage, statusFilter, q, dateRange]);
@@ -492,7 +497,7 @@ export function DocumentsTable({ token, initialDocuments, initialTotal }: Props)
                             <SubmitToKsefButton
                               documentId={doc.id}
                               token={token}
-                              onDone={() => fetchPage(page, statusFilter, q, dateRange)}
+                              onDone={() => fetchPage(page, statusFilter, q, dateRange, explicitDateFrom, explicitDateTo)}
                             />
                           </>
                         )}
@@ -503,13 +508,13 @@ export function DocumentsTable({ token, initialDocuments, initialTotal }: Props)
                           <RetrySubmissionButton
                             documentId={doc.id}
                             token={token}
-                            onDone={() => fetchPage(page, statusFilter, q, dateRange)}
+                            onDone={() => fetchPage(page, statusFilter, q, dateRange, explicitDateFrom, explicitDateTo)}
                           />
                         )}
                         <DeleteButton
                           documentId={doc.id}
                           token={token}
-                          onDone={() => fetchPage(page, statusFilter, q, dateRange)}
+                          onDone={() => fetchPage(page, statusFilter, q, dateRange, explicitDateFrom, explicitDateTo)}
                         />
                       </div>
                     </td>

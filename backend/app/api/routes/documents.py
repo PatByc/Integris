@@ -6,7 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
 from fastapi.responses import Response, JSONResponse
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_membership, get_current_user
@@ -65,6 +65,44 @@ class AuditEventOut(BaseModel):
     event_metadata: dict = {}
     model_config = ConfigDict(from_attributes=True)
 
+
+class ArchiveItemOut(BaseModel):
+    id: UUID
+    filename: str
+    status: str
+    created_at: datetime
+    ksef_number: str | None = None
+    seller_name: str | None = None
+    seller_nip: str | None = None
+    gross_total: float | None = None
+    has_xml: bool = False
+
+
+class ArchiveOut(BaseModel):
+    items: list[ArchiveItemOut]
+    total: int
+    accepted_count: int
+    rejected_count: int
+    storage_bytes: int
+
+
+class SubmissionQueueItemOut(BaseModel):
+    id: UUID
+    filename: str
+    status: str
+    updated_at: datetime
+    seller_name: str | None = None
+    seller_nip: str | None = None
+    invoice_number: str | None = None
+    gross_total: float | None = None
+
+
+class SubmissionQueueOut(BaseModel):
+    items: list[SubmissionQueueItemOut]
+    total: int
+    total_value: float
+
+
 router = APIRouter(prefix="/documents", tags=["documents"])
 
 
@@ -100,6 +138,15 @@ async def get_validation_queue(
     return ValidationQueueOut(**data)
 
 
+@router.get("/submission-queue", response_model=SubmissionQueueOut)
+async def get_submission_queue(
+    membership: Annotated[CompanyMembership, Depends(get_current_membership)],
+    db: AsyncSession = Depends(get_db),
+) -> SubmissionQueueOut:
+    data = await doc_repo.list_submission_queue(db, membership.company_id)
+    return SubmissionQueueOut(**data)
+
+
 @router.get("/bento-stats", response_model=BentoStatsOut)
 async def get_bento_stats(
     membership: Annotated[CompanyMembership, Depends(get_current_membership)],
@@ -119,6 +166,88 @@ async def get_dashboard_stats(
     return DashboardStatsOut(**data)
 
 
+@router.get("/archive", response_model=ArchiveOut)
+async def get_archive(
+    membership: Annotated[CompanyMembership, Depends(get_current_membership)],
+    db: AsyncSession = Depends(get_db),
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    q: str | None = Query(default=None),
+) -> ArchiveOut:
+    from app.models.document import Document as Doc
+    from app.models.invoice_draft import InvoiceDraft
+    from app.models.ksef_submission import KsefSubmission
+    from app.models.xml_export import XmlExport
+
+    cid = membership.company_id
+    archive_statuses = ["accepted", "rejected"]
+
+    base = (
+        select(
+            Doc,
+            InvoiceDraft.seller_name,
+            InvoiceDraft.seller_nip,
+            InvoiceDraft.gross_total,
+            KsefSubmission.ksef_number,
+            XmlExport.id.label("xml_export_id"),
+        )
+        .outerjoin(InvoiceDraft, InvoiceDraft.document_id == Doc.id)
+        .outerjoin(KsefSubmission, KsefSubmission.document_id == Doc.id)
+        .outerjoin(XmlExport, XmlExport.document_id == Doc.id)
+        .where(Doc.company_id == cid, Doc.status.in_(archive_statuses))
+    )
+    if q:
+        pattern = f"%{q}%"
+        base = base.where(
+            Doc.filename.ilike(pattern)
+            | InvoiceDraft.seller_name.ilike(pattern)
+            | InvoiceDraft.buyer_name.ilike(pattern)
+            | InvoiceDraft.invoice_number.ilike(pattern)
+        )
+
+    total_r = await db.execute(select(func.count()).select_from(base.subquery()))
+    total = total_r.scalar_one()
+
+    rows = (await db.execute(
+        base.order_by(Doc.created_at.desc()).limit(limit).offset(offset)
+    )).all()
+
+    accepted_r = await db.execute(
+        select(func.count()).where(Doc.company_id == cid, Doc.status == "accepted")
+    )
+    rejected_r = await db.execute(
+        select(func.count()).where(Doc.company_id == cid, Doc.status == "rejected")
+    )
+    storage_r = await db.execute(
+        select(func.coalesce(func.sum(Doc.file_size_bytes), 0)).where(
+            Doc.company_id == cid, Doc.status.in_(archive_statuses)
+        )
+    )
+
+    items = [
+        ArchiveItemOut(
+            id=row.Document.id,
+            filename=row.Document.filename,
+            status=row.Document.status,
+            created_at=row.Document.created_at,
+            ksef_number=row.ksef_number,
+            seller_name=row.seller_name,
+            seller_nip=row.seller_nip,
+            gross_total=float(row.gross_total) if row.gross_total is not None else None,
+            has_xml=row.xml_export_id is not None,
+        )
+        for row in rows
+    ]
+
+    return ArchiveOut(
+        items=items,
+        total=total,
+        accepted_count=accepted_r.scalar_one(),
+        rejected_count=rejected_r.scalar_one(),
+        storage_bytes=storage_r.scalar_one(),
+    )
+
+
 @router.get("", response_model=DocumentListOut)
 async def list_documents(
     membership: Annotated[CompanyMembership, Depends(get_current_membership)],
@@ -128,10 +257,12 @@ async def list_documents(
     status: str | None = Query(default=None),
     q: str | None = Query(default=None),
     date_from: date | None = Query(default=None),
+    date_to: date | None = Query(default=None),
 ) -> DocumentListOut:
     items, total = await list_by_company(
         db, membership.company_id,
-        limit=limit, offset=offset, status=status, q=q, date_from=date_from,
+        limit=limit, offset=offset, status=status, q=q,
+        date_from=date_from, date_to=date_to,
     )
     return DocumentListOut(
         items=[DocumentOut.model_validate(d) for d in items],

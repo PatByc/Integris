@@ -25,17 +25,6 @@ export default async function DashboardPage({
 
   const token = session.access_token;
 
-  const companyRes = await fetch(`${API_URL}/api/v1/companies/me`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  });
-
-  if (companyRes.status === 404) {
-    redirect("/company/setup");
-  }
-
-  const { company } = await companyRes.json();
-
   const { q = "", status = "", date_range = "" } = await searchParams;
   const params = new URLSearchParams({ limit: "20" });
   if (q) params.set("q", q);
@@ -46,16 +35,18 @@ export default async function DashboardPage({
     params.set("date_from", dateFrom.toISOString().split("T")[0]);
   }
 
-  const [docsRes, statsRes] = await Promise.all([
-    fetch(`${API_URL}/api/v1/documents?${params}`, {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    }),
-    fetch(`${API_URL}/api/v1/documents/stats`, {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    }),
+  const headers = { Authorization: `Bearer ${token}` };
+  const [companyRes, docsRes, statsRes] = await Promise.all([
+    fetch(`${API_URL}/api/v1/companies/me`, { headers, cache: "no-store" }),
+    fetch(`${API_URL}/api/v1/documents?${params}`, { headers, cache: "no-store" }),
+    fetch(`${API_URL}/api/v1/documents/stats`, { headers, cache: "no-store" }),
   ]);
+
+  if (companyRes.status === 404) {
+    redirect("/company/setup");
+  }
+
+  const { company } = await companyRes.json();
 
   const { items: initialDocuments, total: initialTotal } =
     docsRes.ok ? await docsRes.json() : { items: [], total: 0 };
@@ -71,9 +62,6 @@ export default async function DashboardPage({
       <Suspense><Sidebar /></Suspense>
 
       <main className="mx-auto max-w-5xl px-6 py-8 pl-20">
-        <div className="mb-4">
-          <p className="text-sm text-gray-500">{company?.name}</p>
-        </div>
 
         {stats && (
           <DashboardStats

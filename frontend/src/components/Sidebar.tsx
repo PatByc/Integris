@@ -44,7 +44,7 @@ export function Sidebar() {
     {
       key: "ksefSubmission",
       label: t("ksefSubmission"),
-      href: "#",
+      href: "/ksef",
       icon: (
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="h-5 w-5 flex-shrink-0">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />

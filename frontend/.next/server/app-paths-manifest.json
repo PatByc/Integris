@@ -1,7 +1,7 @@
 {
-  "/validation/page": "app/validation/page.js",
   "/page": "app/page.js",
-  "/settings/system/page": "app/settings/system/page.js",
-  "/settings/organization/page": "app/settings/organization/page.js",
-  "/settings/usage/page": "app/settings/usage/page.js"
+  "/dashboard/page": "app/dashboard/page.js",
+  "/validation/[id]/page": "app/validation/[id]/page.js",
+  "/ksef/page": "app/ksef/page.js",
+  "/security/page": "app/security/page.js"
 }
