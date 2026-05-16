@@ -512,3 +512,24 @@ Reason: The project needs always-on background workers (Redis queue consumers), 
 Tradeoffs: If the combined worker container hits the 0.5 GB RAM ceiling all 5 workers restart together. At MVP load (workers idle most of the time), this is acceptable. If one worker type sees disproportionate load in the future, it can be split back out into its own Railway service without changing any worker logic.
 
 Follow-up: When revenue justifies it, split high-throughput workers (likely OCR and extraction) into dedicated services with larger memory allocations. If Railway costs grow beyond ~$20/month, migrate workers to a Hetzner VPS running docker-compose (the existing `docker-compose.yml` already supports this without code changes).
+
+---
+
+## DEC-030: Deployment infrastructure — CORS, GCV credentials, env var split
+
+Date: 2026-05-17
+Status: accepted
+
+Decision: Three production-readiness changes made before Vercel + Railway deployment:
+
+1. **CORS multi-origin support** — `backend/app/core/config.py` gains `cors_origins: str = ""` (comma-separated). `backend/app/main.py` merges this with `app_url` into the `allow_origins` list. Allows the Vercel production URL and any preview URLs to be configured without code changes.
+
+2. **Google Cloud Vision credentials on Railway** — Railway containers have no persistent filesystem. `workers/entrypoint.sh` (new file) reads `GOOGLE_CREDENTIALS_JSON` env var, writes it to `/tmp/gcloud-key.json`, sets `GOOGLE_APPLICATION_CREDENTIALS`, then execs supervisord. `Dockerfile.worker` updated to use this entrypoint. Local dev still uses `GOOGLE_APPLICATION_CREDENTIALS` pointing to a file — unchanged.
+
+3. **Two DATABASE_URL formats** — Documented in `.env.example`: backend uses `postgresql+asyncpg://` (SQLAlchemy async / asyncpg), workers use `postgresql://` (psycopg2). Same Supabase host, different driver prefix. Railway requires these as separate env vars per service.
+
+Reason: Without these, deploying to Railway + Vercel would fail at CORS (frontend blocked), at GCV (workers can't find key file), and at DB connection (wrong URL prefix crashes one of the two services).
+
+Tradeoffs: `GOOGLE_CREDENTIALS_JSON` as a Railway env var is a long string (2–3 KB JSON). Railway supports long values; this is the standard approach for credential injection in containerized environments.
+
+Follow-up: When KSeF sandbox testing begins, add `KSEF_CLIENT_ID`, `KSEF_CLIENT_SECRET`, `KSEF_PUBLIC_KEY_PEM` to the workers service and set `KSEF_ENV=sandbox`.

@@ -10,9 +10,13 @@ app = FastAPI(
     description="KSeF invoice processing middleware",
 )
 
+_cors_origins = [settings.app_url]
+if settings.cors_origins:
+    _cors_origins += [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.app_url],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
