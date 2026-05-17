@@ -13,6 +13,8 @@ config = context.config
 db_url = os.environ.get("DATABASE_URL", "")
 if not db_url:
     raise RuntimeError("DATABASE_URL environment variable is not set")
+# Alembic uses a sync engine; strip async driver prefix so psycopg2 is used
+db_url = db_url.replace("postgresql+asyncpg://", "postgresql://")
 config.set_main_option("sqlalchemy.url", db_url)
 
 if config.config_file_name is not None:

@@ -23,6 +23,8 @@ interface InvoiceDraftOut {
   net_total: string | null;
   vat_total: string | null;
   gross_total: string | null;
+  confidence: number | null;
+  flags: string[] | null;
   line_items: LineItemOut[];
 }
 
