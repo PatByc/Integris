@@ -25,13 +25,20 @@ export class ApiError extends Error {
   }
 }
 
+function extractDetail(detail: unknown): string {
+  if (Array.isArray(detail)) {
+    return detail.map((e) => (typeof e === "object" && e !== null && "msg" in e ? (e as { msg: string }).msg : String(e))).join("; ");
+  }
+  return typeof detail === "string" ? detail : "Request failed";
+}
+
 export async function apiGet<T>(path: string): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     headers: await authHeaders(),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: "Request failed" }));
-    throw new ApiError(res.status, err.detail ?? "Request failed");
+    throw new ApiError(res.status, extractDetail(err.detail));
   }
   return res.json();
 }
@@ -47,7 +54,7 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: "Request failed" }));
-    throw new ApiError(res.status, err.detail ?? "Request failed");
+    throw new ApiError(res.status, extractDetail(err.detail));
   }
   return res.json();
 }
@@ -63,7 +70,7 @@ export async function apiPatch<T>(path: string, body: unknown): Promise<T> {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: "Request failed" }));
-    throw new ApiError(res.status, err.detail ?? "Request failed");
+    throw new ApiError(res.status, extractDetail(err.detail));
   }
   return res.json();
 }
@@ -76,7 +83,7 @@ export async function apiUpload<T>(path: string, formData: FormData): Promise<T>
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: "Upload failed" }));
-    throw new ApiError(res.status, err.detail ?? "Upload failed");
+    throw new ApiError(res.status, extractDetail(err.detail));
   }
   return res.json();
 }

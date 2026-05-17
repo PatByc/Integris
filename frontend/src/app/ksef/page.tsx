@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { Sidebar } from "@/components/Sidebar";
 import { createClient } from "@/lib/supabase";
+import { useTranslations } from "next-intl";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -100,6 +101,7 @@ function XmlViewer({ xml }: { xml: string }) {
 }
 
 export default function KsefPage() {
+  const t = useTranslations("Ksef");
   const [data, setData] = useState<QueueData | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -200,8 +202,8 @@ export default function KsefPage() {
         {/* Page header */}
         <div className="flex items-end justify-between py-4 shrink-0">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">KSeF Submission</h1>
-            <p className="mt-0.5 text-sm text-gray-500">Review and submit approved invoices to the National e-Invoice System.</p>
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900">{t("title")}</h1>
+            <p className="mt-0.5 text-sm text-gray-500">{t("subtitle")}</p>
           </div>
         </div>
 
@@ -213,21 +215,21 @@ export default function KsefPage() {
 
             {/* Stats card */}
             <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm shrink-0">
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Ready to Submit</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">{t("readyToSubmit")}</p>
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Batch count</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">{t("batchCount")}</p>
                   <p className="text-2xl font-bold text-blue-600">{data ? readyCount : "—"}</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Total value</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">{t("totalValue")}</p>
                   <p className="text-lg font-bold text-gray-900 leading-tight">{data ? formatPLN(data.total_value) : "—"}</p>
                 </div>
               </div>
               {readyCount > 0 && (
                 <p className="mt-3 text-xs text-gray-400 flex items-center gap-1">
                   <Icon name="verified" className="text-[14px] text-blue-500" />
-                  All invoices passed FA(3) structural validation.
+                  {t("validationPassed")}
                 </p>
               )}
             </div>
@@ -235,14 +237,14 @@ export default function KsefPage() {
             {/* Invoice list */}
             <div className="bg-white border border-gray-200 rounded-xl flex flex-col flex-1 overflow-hidden shadow-sm">
               <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between shrink-0">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">Invoice Queue</span>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">{t("invoiceQueue")}</span>
                 <Icon name="filter_list" className="text-[18px] text-gray-400" />
               </div>
               <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
                 {items.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full py-16 text-center text-gray-400">
                     <Icon name="inbox" className="text-[40px] mb-2 text-gray-200" />
-                    <p className="text-sm">{data ? "No invoices ready for submission." : "Loading…"}</p>
+                    <p className="text-sm">{data ? t("noInvoices") : t("loading")}</p>
                   </div>
                 ) : (
                   items.map((item) => {
@@ -265,18 +267,18 @@ export default function KsefPage() {
                           </span>
                           <span className="font-mono text-[12px] text-gray-700 shrink-0">{formatPLN(item.gross_total)}</span>
                         </div>
-                        <p className="text-sm text-gray-800 truncate">{item.seller_name ?? <span className="italic text-gray-400">Unknown contractor</span>}</p>
+                        <p className="text-sm text-gray-800 truncate">{item.seller_name ?? <span className="italic text-gray-400">{t("unknownContractor")}</span>}</p>
                         {item.seller_nip && (
                           <p className="text-[10px] text-gray-400 font-mono">NIP: {item.seller_nip}</p>
                         )}
                         <div className="flex items-center justify-between mt-1 gap-2">
                           {isReady ? (
                             <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
-                              <span className="w-1 h-1 rounded-full bg-green-600" /> Ready
+                              <span className="w-1 h-1 rounded-full bg-green-600" /> {t("badgeReady")}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">
-                              <span className="w-1 h-1 rounded-full bg-red-600" /> Rejected
+                              <span className="w-1 h-1 rounded-full bg-red-600" /> {t("badgeRejected")}
                             </span>
                           )}
                           <button
@@ -288,7 +290,7 @@ export default function KsefPage() {
                                 : "bg-orange-100 text-orange-700 border border-orange-200 hover:bg-orange-200"
                             }`}
                           >
-                            {isSubmitting ? "…" : isReady ? "Submit" : "Retry"}
+                            {isSubmitting ? "…" : isReady ? t("submit") : t("retry")}
                           </button>
                         </div>
                       </div>
@@ -307,14 +309,14 @@ export default function KsefPage() {
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex items-center justify-between shrink-0">
                 <div className="flex gap-2">
                   <button className="px-3 py-1.5 bg-white border border-gray-200 rounded-md text-[11px] font-semibold text-gray-700 shadow-sm">
-                    FA(3) XML Structure
+                    {t("tabXml")}
                   </button>
                   <button
                     disabled
                     title="Coming soon"
                     className="px-3 py-1.5 text-[11px] font-semibold text-gray-300 cursor-not-allowed"
                   >
-                    Visual Invoice
+                    {t("tabVisual")}
                   </button>
                 </div>
                 <div className="flex items-center gap-3">
@@ -324,7 +326,7 @@ export default function KsefPage() {
                     className="flex items-center gap-1.5 text-[11px] text-gray-500 hover:text-blue-600 disabled:opacity-30 transition-colors"
                   >
                     <Icon name="content_copy" className="text-[16px]" />
-                    {copied ? "Copied!" : "Copy XML"}
+                    {copied ? t("copied") : t("copyXml")}
                   </button>
                   <button
                     onClick={downloadXml}
@@ -332,7 +334,7 @@ export default function KsefPage() {
                     className="flex items-center gap-1.5 text-[11px] text-gray-500 hover:text-blue-600 disabled:opacity-30 transition-colors"
                   >
                     <Icon name="download" className="text-[16px]" />
-                    Export
+                    {t("export")}
                   </button>
                 </div>
               </div>
@@ -342,11 +344,11 @@ export default function KsefPage() {
                 {!selectedId ? (
                   <div className="flex flex-col items-center justify-center h-full text-center text-gray-300 py-20">
                     <Icon name="code" className="text-[56px] mb-3" />
-                    <p className="text-sm text-gray-400">Select an invoice from the list to preview its XML</p>
+                    <p className="text-sm text-gray-400">{t("selectInvoice")}</p>
                   </div>
                 ) : xmlLoading ? (
                   <div className="flex items-center justify-center h-full text-gray-400 text-sm">
-                    Loading XML…
+                    {t("loadingXml")}
                   </div>
                 ) : xmlContent ? (
                   <div className="border-l-2 border-gray-100 ml-4 h-full">
@@ -354,7 +356,7 @@ export default function KsefPage() {
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-full text-gray-400 text-sm">
-                    XML not available for this document.
+                    {t("xmlUnavailable")}
                   </div>
                 )}
               </div>
@@ -372,7 +374,7 @@ export default function KsefPage() {
                 </div>
                 <div className="flex items-center gap-1.5 text-gray-400">
                   <Icon name="lock" className="text-[14px]" />
-                  <span className="text-[10px] font-semibold uppercase tracking-wider">Secured with AES-256 Encryption</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider">{t("securedEncryption")}</span>
                 </div>
               </div>
             </div>

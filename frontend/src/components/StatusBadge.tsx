@@ -56,7 +56,9 @@ export function StatusBadge({ documentId, status }: Props) {
   const [open, setOpen] = useState(false);
   const [history, setHistory] = useState<HistoryEvent[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [popupPos, setPopupPos] = useState({ top: 0, left: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setHistory(null);
@@ -74,6 +76,10 @@ export function StatusBadge({ documentId, status }: Props) {
 
   async function toggle() {
     if (open) { setOpen(false); return; }
+    if (buttonRef.current) {
+      const r = buttonRef.current.getBoundingClientRect();
+      setPopupPos({ top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX });
+    }
     setOpen(true);
     if (history !== null) return;
     setLoading(true);
@@ -93,6 +99,7 @@ export function StatusBadge({ documentId, status }: Props) {
   return (
     <div ref={containerRef} className="relative inline-block">
       <button
+        ref={buttonRef}
         onClick={toggle}
         title={t("clickHistory")}
         className={`cursor-pointer rounded px-2 py-0.5 text-xs font-medium ring-offset-1 transition-all hover:ring-2 hover:ring-current hover:ring-offset-1 ${STATUS_BADGE[status] ?? "bg-gray-100 text-gray-600"}`}
@@ -101,7 +108,10 @@ export function StatusBadge({ documentId, status }: Props) {
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-1 w-56 rounded-lg border border-gray-200 bg-white py-2 shadow-lg">
+        <div
+          className="fixed z-50 w-56 rounded-lg border border-gray-200 bg-white py-2 shadow-lg"
+          style={{ top: popupPos.top, left: popupPos.left }}
+        >
           <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
             {t("statusHistory")}
           </p>

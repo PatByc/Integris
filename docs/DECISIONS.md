@@ -533,3 +533,84 @@ Reason: Without these, deploying to Railway + Vercel would fail at CORS (fronten
 Tradeoffs: `GOOGLE_CREDENTIALS_JSON` as a Railway env var is a long string (2–3 KB JSON). Railway supports long values; this is the standard approach for credential injection in containerized environments.
 
 Follow-up: When KSeF sandbox testing begins, add `KSEF_CLIENT_ID`, `KSEF_CLIENT_SECRET`, `KSEF_PUBLIC_KEY_PEM` to the workers service and set `KSEF_ENV=sandbox`.
+
+---
+
+## DEC-031: Alembic env.py — strip +asyncpg for sync migrations
+
+Date: 2026-05-17
+Status: accepted
+
+Decision: `backend/alembic/env.py` now strips the `+asyncpg` driver prefix from `DATABASE_URL` before passing it to `engine_from_config` (synchronous). One line added after reading the env var: `db_url = db_url.replace("postgresql+asyncpg://", "postgresql://")`.
+
+Reason: Alembic's `engine_from_config` is synchronous and cannot use the asyncpg driver. The backend's `DATABASE_URL` uses `postgresql+asyncpg://` for SQLAlchemy async, but Alembic needs `postgresql://` (psycopg2, which is also installed). Without this fix, Railway startup failed with `RuntimeError: DATABASE_URL environment variable is not set` followed by a driver error.
+
+Tradeoffs: None — psycopg2-binary is already in requirements.txt. The strip is a no-op for non-asyncpg URLs.
+
+Follow-up: None.
+
+---
+
+## DEC-032: next.config.ts — conditional standalone output
+
+Date: 2026-05-17
+Status: accepted
+
+Decision: `output: "standalone"` in `frontend/next.config.ts` is now conditional on `NEXT_OUTPUT=standalone` env var. `Dockerfile.frontend` sets `ENV NEXT_OUTPUT=standalone` before the build step. Vercel builds without this env var, producing standard Next.js output.
+
+Reason: `output: "standalone"` generates a self-hosted Node.js server incompatible with Vercel's serverless infrastructure — all routes returned 404. Docker builds still need standalone output for `COPY --from=builder /app/.next/standalone ./`.
+
+Tradeoffs: None — two deployment targets use different output modes without code duplication.
+
+Follow-up: None.
+
+---
+
+## DEC-033: Vercel TypeScript build errors fixed
+
+Date: 2026-05-17
+Status: accepted
+
+Decision: Two type errors that passed local dev but failed `next build`:
+1. `frontend/src/components/review/InvoiceForm.tsx` — local `InvoiceDraftOut` was missing `confidence: number | null` and `flags: string[] | null`. Added both fields.
+2. `frontend/src/components/DocumentsTable.tsx:327` — `handlePageChange` called `fetchPage` with 4 args instead of 6 (missing `explicitDateFrom`, `explicitDateTo`). Fixed.
+
+Reason: Next.js local dev server skips full TypeScript checking; `next build` runs `tsc --noEmit` and catches these.
+
+Tradeoffs: None.
+
+Follow-up: Run `npm run typecheck` locally before pushing to catch these earlier.
+
+---
+
+## DEC-034: Vercel deployment — live at integris-ai.vercel.app
+
+Date: 2026-05-17
+Status: accepted
+
+Decision: Frontend deployed to Vercel at `https://integris-ai.vercel.app`. Key configuration required:
+- **Framework Preset must be set to "Next.js"** — Vercel auto-detection failed on the monorepo (repo root has no package.json), defaulted to "Other", causing 404 on all routes. Must be set manually in Settings → General → Framework Preset.
+- **Root Directory: `frontend`** — set in Vercel dashboard.
+- **APP_URL on Railway must not have trailing slash** — `https://integris-ai.vercel.app` (no `/`), otherwise CORS origin matching fails.
+- `vercel.json` at repo root contains `{}` (empty, harmless).
+
+Reason: Without correct framework preset, Vercel doesn't configure serverless function routing for Next.js, serving nothing.
+
+Tradeoffs: None.
+
+Follow-up: If new Vercel project is ever created, set Framework Preset to Next.js during initial setup wizard before first deploy.
+
+---
+
+## DEC-035: Railway Redis service added
+
+Date: 2026-05-17
+Status: accepted
+
+Decision: Added a Railway Redis service to the project. Backend service references it via `REDIS_URL = ${{Redis.REDIS_URL}}`. Workers service references the same variable.
+
+Reason: Workers (OCR, extraction, XML, KSeF submission, UPO polling) depend on Redis for the job queue. Without a running Redis, all background processing is broken.
+
+Tradeoffs: Counts as one of the Railway free-tier service slots.
+
+Follow-up: Monitor Redis memory usage; free tier has limited RAM.

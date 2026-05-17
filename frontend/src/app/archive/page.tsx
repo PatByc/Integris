@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { Sidebar } from "@/components/Sidebar";
 import { createClient } from "@/lib/supabase";
+import { useTranslations } from "next-intl";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const PAGE_SIZE = 20;
@@ -65,6 +66,7 @@ function getPaginationPages(current: number, total: number): (number | "…")[] 
 }
 
 export default function ArchivePage() {
+  const t = useTranslations("Archive");
   const [data, setData] = useState<ArchiveData | null>(null);
   const [page, setPage] = useState(0);
   const [token, setToken] = useState<string | null>(null);
@@ -147,19 +149,17 @@ export default function ArchivePage() {
           {/* Page header */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
             <div>
-              <h1 className="text-4xl font-bold tracking-tight text-gray-900">Audit Archive</h1>
-              <p className="mt-1 text-sm text-gray-500">
-                Comprehensive historical record of all institutional middleware transactions.
-              </p>
+              <h1 className="text-4xl font-bold tracking-tight text-gray-900">{t("title")}</h1>
+              <p className="mt-1 text-sm text-gray-500">{t("subtitle")}</p>
             </div>
             <div className="flex gap-2">
               <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-blue-600 font-semibold text-sm shadow-sm">
                 <Icon name="file_download" className="text-[20px]" />
-                Export CSV
+                {t("exportCsv")}
               </button>
               <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-sm shadow-sm">
                 <Icon name="refresh" className="text-[20px]" />
-                Sync KSeF
+                {t("syncKsef")}
               </button>
             </div>
           </div>
@@ -169,7 +169,7 @@ export default function ArchivePage() {
             <table className="w-full text-left border-collapse">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  {["Date", "KSeF ID", "Contractor", "Value", "Status", "Downloads"].map((h, i) => (
+                  {[t("colDate"), t("colKsefId"), t("colContractor"), t("colValue"), t("colStatus"), t("colDownloads")].map((h, i) => (
                     <th
                       key={h}
                       className={`px-4 py-4 text-[11px] font-semibold uppercase tracking-wider text-gray-700 ${i === 5 ? "text-right" : ""}`}
@@ -183,7 +183,7 @@ export default function ArchivePage() {
                 {items.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-4 py-20 text-center text-sm text-gray-400">
-                      {data ? "No archived invoices yet." : "Loading…"}
+                      {data ? t("noArchived") : t("loading")}
                     </td>
                   </tr>
                 ) : (
@@ -199,7 +199,7 @@ export default function ArchivePage() {
 
                       <td className="px-4 py-3">
                         <div className="text-sm font-semibold text-gray-900 truncate max-w-[180px]">
-                          {item.seller_name ?? <span className="text-gray-400 italic">unknown</span>}
+                          {item.seller_name ?? <span className="text-gray-400 italic">{t("unknownContractor")}</span>}
                         </div>
                         {item.seller_nip && (
                           <div className="text-xs text-gray-400 font-mono">NIP: {item.seller_nip}</div>
@@ -214,12 +214,12 @@ export default function ArchivePage() {
                         {item.status === "accepted" ? (
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 rounded-full text-[10px] font-bold border border-green-200">
                             <span className="w-1.5 h-1.5 rounded-full bg-green-600" />
-                            ACCEPTED
+                            {t("statusAccepted")}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-700 rounded-full text-[10px] font-bold border border-red-200">
                             <span className="w-1.5 h-1.5 rounded-full bg-red-600" />
-                            REJECTED
+                            {t("statusRejected")}
                           </span>
                         )}
                       </td>
@@ -260,8 +260,8 @@ export default function ArchivePage() {
             {totalPages > 1 && (
               <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 flex items-center justify-between">
                 <span className="text-sm text-gray-500">
-                  Showing <span className="font-bold">{page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, data!.total)}</span> of{" "}
-                  <span className="font-bold">{data!.total.toLocaleString()}</span> entries
+                  {t("showing")} <span className="font-bold">{page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, data!.total)}</span> {t("of")}{" "}
+                  <span className="font-bold">{data!.total.toLocaleString()}</span> {t("entries")}
                 </span>
                 <div className="flex gap-1">
                   <button
@@ -309,7 +309,7 @@ export default function ArchivePage() {
                 <Icon name="verified" filled className="text-[24px]" />
               </div>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Total Accepted</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">{t("totalAccepted")}</p>
                 <h3 className="text-2xl font-bold text-gray-900">{data ? data.accepted_count.toLocaleString() : "—"}</h3>
               </div>
             </div>
@@ -319,14 +319,14 @@ export default function ArchivePage() {
                 <Icon name="error" filled className="text-[24px]" />
               </div>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Total Rejected</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">{t("totalRejected")}</p>
                 <h3 className="text-2xl font-bold text-gray-900">{data ? data.rejected_count.toLocaleString() : "—"}</h3>
               </div>
             </div>
 
             <div className="bg-white border border-gray-200 p-6 rounded-xl flex items-center gap-4 shadow-sm relative overflow-hidden">
               <div className="z-10 relative">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Archived Storage</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">{t("archivedStorage")}</p>
                 <h3 className="text-2xl font-bold text-gray-900">{data ? formatBytes(data.storage_bytes) : "—"}</h3>
               </div>
               <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-blue-50 to-transparent flex items-center justify-end pr-4 pointer-events-none">
