@@ -324,7 +324,7 @@ export function DocumentsTable({ token, initialDocuments, initialTotal }: Props)
 
   function handlePageChange(newPage: number) {
     setPage(newPage);
-    fetchPage(newPage, statusFilter, q, dateRange);
+    fetchPage(newPage, statusFilter, q, dateRange, explicitDateFrom, explicitDateTo);
   }
 
   function handleFilterChange(value: string) {
