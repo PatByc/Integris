@@ -1,7 +1,1 @@
-{
-  "/page": "app/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/ksef/page": "app/ksef/page.js",
-  "/validation/[id]/page": "app/validation/[id]/page.js",
-  "/security/page": "app/security/page.js"
-}
+{}
