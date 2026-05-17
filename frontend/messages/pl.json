@@ -113,6 +113,38 @@
   "Dashboard": {
     "uploadInvoice": "Prześlij fakturę"
   },
+  "DashboardStats": {
+    "pendingReview": "Oczekuje na weryfikację",
+    "invoicesNeedAttention": "faktur wymaga uwagi",
+    "awaitingSubmission": "Oczekuje na wysyłkę",
+    "total": "łącznie",
+    "ocrAccuracy": "Skuteczność OCR",
+    "ocrExtractionsSucceeded": "ekstrakcji OCR zakończyło się pomyślnie"
+  },
+  "BentoSection": {
+    "documentsLast7Days": "Dokumenty — ostatnie 7 dni",
+    "daySun": "Nie",
+    "dayMon": "Pon",
+    "dayTue": "Wt",
+    "dayWed": "Śr",
+    "dayThu": "Czw",
+    "dayFri": "Pt",
+    "daySat": "Sob",
+    "pipeline": "Pipeline",
+    "noDocumentsYet": "Brak dokumentów",
+    "total": "Łącznie",
+    "pdfStorage": "Storage PDF",
+    "uploadedPdfs": "przesłanych plików PDF",
+    "quotaUsed": "{pct}% z {quota} przydziału",
+    "statusUploaded": "Przesłane",
+    "statusProcessing": "W trakcie",
+    "statusNeedsReview": "Do weryfikacji",
+    "statusApproved": "Zatwierdzone",
+    "statusXmlGenerated": "XML wygenerowany",
+    "statusSubmitted": "Wysłane",
+    "statusAccepted": "Zaakceptowane",
+    "statusFailed": "Błąd"
+  },
   "Upload": {
     "title": "Prześlij fakturę",
     "subtitle": "Prześlij fakturę PDF, aby rozpocząć przetwarzanie.",

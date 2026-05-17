@@ -113,6 +113,38 @@
   "Dashboard": {
     "uploadInvoice": "Upload invoice"
   },
+  "DashboardStats": {
+    "pendingReview": "Pending Review",
+    "invoicesNeedAttention": "invoices need attention",
+    "awaitingSubmission": "Awaiting Submission",
+    "total": "total",
+    "ocrAccuracy": "OCR Accuracy",
+    "ocrExtractionsSucceeded": "of OCR extractions succeeded"
+  },
+  "BentoSection": {
+    "documentsLast7Days": "Documents — last 7 days",
+    "daySun": "Sun",
+    "dayMon": "Mon",
+    "dayTue": "Tue",
+    "dayWed": "Wed",
+    "dayThu": "Thu",
+    "dayFri": "Fri",
+    "daySat": "Sat",
+    "pipeline": "Pipeline",
+    "noDocumentsYet": "No documents yet",
+    "total": "Total",
+    "pdfStorage": "PDF Storage",
+    "uploadedPdfs": "uploaded PDFs",
+    "quotaUsed": "{pct}% of {quota} quota",
+    "statusUploaded": "Uploaded",
+    "statusProcessing": "Processing",
+    "statusNeedsReview": "Needs Review",
+    "statusApproved": "Approved",
+    "statusXmlGenerated": "XML Generated",
+    "statusSubmitted": "Submitted",
+    "statusAccepted": "Accepted",
+    "statusFailed": "Failed"
+  },
   "Upload": {
     "title": "Upload invoice",
     "subtitle": "Upload a PDF invoice to begin processing.",

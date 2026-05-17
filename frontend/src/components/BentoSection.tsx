@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -16,17 +17,17 @@ interface BentoStats {
   storage_quota_bytes: number;
 }
 
-const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAY_KEYS = ["daySun", "dayMon", "dayTue", "dayWed", "dayThu", "dayFri", "daySat"] as const;
 
 const STATUS_GROUPS = [
-  { label: "Uploaded",        statuses: ["uploaded"],                                                  color: "bg-gray-300" },
-  { label: "Processing",      statuses: ["ocr_processing", "extraction_processing"],                   color: "bg-blue-400" },
-  { label: "Needs Review",    statuses: ["needs_review", "validation_failed"],                         color: "bg-amber-400" },
-  { label: "Approved",        statuses: ["approved"],                                                  color: "bg-indigo-400" },
-  { label: "XML Generated",   statuses: ["xml_generated"],                                             color: "bg-indigo-600" },
-  { label: "Submitted",       statuses: ["submission_pending", "submitted"],                           color: "bg-purple-400" },
-  { label: "Accepted",        statuses: ["accepted"],                                                  color: "bg-green-500" },
-  { label: "Failed",          statuses: ["ocr_failed", "extraction_failed", "rejected", "cancelled"],  color: "bg-red-400" },
+  { key: "statusUploaded",     statuses: ["uploaded"],                                                  color: "bg-gray-300" },
+  { key: "statusProcessing",   statuses: ["ocr_processing", "extraction_processing"],                   color: "bg-blue-400" },
+  { key: "statusNeedsReview",  statuses: ["needs_review", "validation_failed"],                         color: "bg-amber-400" },
+  { key: "statusApproved",     statuses: ["approved"],                                                  color: "bg-indigo-400" },
+  { key: "statusXmlGenerated", statuses: ["xml_generated"],                                             color: "bg-indigo-600" },
+  { key: "statusSubmitted",    statuses: ["submission_pending", "submitted"],                           color: "bg-purple-400" },
+  { key: "statusAccepted",     statuses: ["accepted"],                                                  color: "bg-green-500" },
+  { key: "statusFailed",       statuses: ["ocr_failed", "extraction_failed", "rejected", "cancelled"],  color: "bg-red-400" },
 ];
 
 function formatBytes(bytes: number): string {
@@ -37,6 +38,7 @@ function formatBytes(bytes: number): string {
 }
 
 export function BentoSection({ token }: { token: string }) {
+  const t = useTranslations("BentoSection");
   const [stats, setStats] = useState<BentoStats | null>(null);
 
   useEffect(() => {
@@ -70,7 +72,7 @@ export function BentoSection({ token }: { token: string }) {
       {/* 7-day bar chart — spans 2 columns */}
       <div className="col-span-2 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
         <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-gray-400">
-          Documents — last 7 days
+          {t("documentsLast7Days")}
         </p>
         <div className="flex gap-2">
           {/* Y-axis ticks */}
@@ -110,7 +112,7 @@ export function BentoSection({ token }: { token: string }) {
             <div className="mt-1.5 flex gap-1.5">
               {docs_per_day.map(({ date }) => (
                 <div key={date} className="flex-1 text-center text-xs text-gray-400">
-                  {DAY_LABELS[new Date(date + "T12:00:00").getDay()]}
+                  {t(DAY_KEYS[new Date(date + "T12:00:00").getDay()])}
                 </div>
               ))}
             </div>
@@ -122,16 +124,16 @@ export function BentoSection({ token }: { token: string }) {
       <div className="flex flex-col gap-4">
         {/* Pipeline breakdown */}
         <div className="flex-1 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">Pipeline</p>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("pipeline")}</p>
           {pipelineRows.length === 0 ? (
-            <p className="text-sm text-gray-400">No documents yet</p>
+            <p className="text-sm text-gray-400">{t("noDocumentsYet")}</p>
           ) : (
             <ul className="space-y-2">
               {pipelineRows.map((g) => (
-                <li key={g.label} className="flex items-center justify-between gap-2 text-sm">
+                <li key={g.key} className="flex items-center justify-between gap-2 text-sm">
                   <span className="flex items-center gap-2 text-gray-600">
                     <span className={`h-2 w-2 flex-shrink-0 rounded-full ${g.color}`} />
-                    {g.label}
+                    {t(g.key)}
                   </span>
                   <span className="font-semibold text-gray-900">{g.count}</span>
                 </li>
@@ -140,7 +142,7 @@ export function BentoSection({ token }: { token: string }) {
           )}
           <div className="mt-3 border-t border-gray-100 pt-3">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-400">Total</span>
+              <span className="text-gray-400">{t("total")}</span>
               <span className="font-semibold text-gray-900">{totalDocs}</span>
             </div>
           </div>
@@ -148,12 +150,12 @@ export function BentoSection({ token }: { token: string }) {
 
         {/* Storage */}
         <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">PDF Storage</p>
+          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("pdfStorage")}</p>
           <p className="text-2xl font-bold text-gray-900">{formatBytes(storage_bytes)}</p>
           <p className="mt-1 text-xs text-gray-400">
             {stats.storage_quota_bytes > 0
-              ? `${((storage_bytes / stats.storage_quota_bytes) * 100).toFixed(1)}% of ${formatBytes(stats.storage_quota_bytes)} quota`
-              : "uploaded PDFs"}
+              ? t("quotaUsed", { pct: ((storage_bytes / stats.storage_quota_bytes) * 100).toFixed(1), quota: formatBytes(stats.storage_quota_bytes) })
+              : t("uploadedPdfs")}
           </p>
         </div>
       </div>
