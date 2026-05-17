@@ -382,13 +382,13 @@ export function DocumentsTable({ token, initialDocuments, initialTotal }: Props)
               onChange={(e) => handleDateRangeChange(e.target.value)}
               className="rounded border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">All time</option>
-              <option value="7">Last 7 days</option>
-              <option value="30">Last 30 days</option>
+              <option value="">{t("allTime")}</option>
+              <option value="7">{t("last7Days")}</option>
+              <option value="30">{t("last30Days")}</option>
             </select>
             <div className="h-4 w-px bg-gray-200" />
             <span className="text-sm text-gray-400">
-              Showing {documents.length} of {total}
+              {t("showing", { count: documents.length, total })}
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -400,7 +400,7 @@ export function DocumentsTable({ token, initialDocuments, initialTotal }: Props)
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
-              Export Report
+              {t("exportReport")}
             </button>
             <button
               disabled
@@ -410,7 +410,7 @@ export function DocumentsTable({ token, initialDocuments, initialTotal }: Props)
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
               </svg>
-              Upload Batch
+              {t("uploadBatch")}
             </button>
           </div>
         </div>

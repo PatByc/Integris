@@ -5,27 +5,23 @@ import Link from "next/link";
 import { AppHeader } from "@/components/AppHeader";
 import { Sidebar } from "@/components/Sidebar";
 import { apiGet } from "@/lib/api";
+import { useTranslations } from "next-intl";
 
-const ERROR_META: Record<string, { label: string; critical: boolean }> = {
-  invalid_seller_nip:           { label: "Invalid seller NIP",    critical: true },
-  invalid_buyer_nip:            { label: "Invalid buyer NIP",     critical: true },
-  totals_mismatch:              { label: "Totals mismatch",       critical: true },
-  line_items_total_mismatch:    { label: "Line items mismatch",   critical: true },
-  required_seller_name:         { label: "Missing seller name",   critical: false },
-  required_seller_nip:          { label: "Missing seller NIP",   critical: false },
-  required_buyer_name:          { label: "Missing buyer name",    critical: false },
-  required_invoice_number:      { label: "Missing invoice no.",   critical: false },
-  required_issue_date:          { label: "Missing issue date",    critical: false },
-  required_gross_total:         { label: "Missing total",         critical: false },
-  future_issue_date:            { label: "Future date",           critical: false },
-  payment_before_issue_date:    { label: "Payment date error",    critical: false },
-  invalid_vat_rate:             { label: "Invalid VAT rate",      critical: false },
+const ERROR_META: Record<string, { key: string; critical: boolean }> = {
+  invalid_seller_nip:           { key: "errInvalidSellerNip",      critical: true },
+  invalid_buyer_nip:            { key: "errInvalidBuyerNip",       critical: true },
+  totals_mismatch:              { key: "errTotalsMismatch",         critical: true },
+  line_items_total_mismatch:    { key: "errLineItemsMismatch",      critical: true },
+  required_seller_name:         { key: "errMissingSellerName",      critical: false },
+  required_seller_nip:          { key: "errMissingSellerNip",       critical: false },
+  required_buyer_name:          { key: "errMissingBuyerName",       critical: false },
+  required_invoice_number:      { key: "errMissingInvoiceNumber",   critical: false },
+  required_issue_date:          { key: "errMissingIssueDate",       critical: false },
+  required_gross_total:         { key: "errMissingTotal",           critical: false },
+  future_issue_date:            { key: "errFutureDate",             critical: false },
+  payment_before_issue_date:    { key: "errPaymentDateError",       critical: false },
+  invalid_vat_rate:             { key: "errInvalidVatRate",         critical: false },
 };
-
-function errorLabel(rule: string | null): { label: string; critical: boolean } {
-  if (!rule) return { label: "No errors", critical: false };
-  return ERROR_META[rule] ?? { label: rule.replace(/_/g, " "), critical: false };
-}
 
 interface QueueItem {
   id: string;
@@ -59,6 +55,7 @@ function StatCard({ label, value, sub, valueClass }: {
 }
 
 export default function ValidationPage() {
+  const t = useTranslations("Review");
   const [data, setData] = useState<QueueData | null>(null);
 
   useEffect(() => {
@@ -72,6 +69,13 @@ export default function ValidationPage() {
     return () => clearInterval(id);
   }, []);
 
+  function errorLabel(rule: string | null): { label: string; critical: boolean } {
+    if (!rule) return { label: t("errNone"), critical: false };
+    const meta = ERROR_META[rule];
+    if (meta) return { label: t(meta.key), critical: meta.critical };
+    return { label: rule.replace(/_/g, " "), critical: false };
+  }
+
   const items = data?.items ?? [];
 
   return (
@@ -83,14 +87,17 @@ export default function ValidationPage() {
         {/* Header */}
         <div className="mb-6 flex items-end justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Validation Queue</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t("queueTitle")}</h1>
             {data && (
               <p className="mt-1 text-sm text-gray-500">
                 {data.pending_count === 0
-                  ? "Queue is clear"
-                  : <>Manual review required for{" "}
-                    <span className="font-semibold text-red-600">{data.pending_count} invoice{data.pending_count !== 1 ? "s" : ""}</span>
-                  </>}
+                  ? t("queueClear")
+                  : <>
+                      {t("manualReviewRequired")}{" "}
+                      <span className="font-semibold text-red-600">
+                        {t("invoiceCount", { count: data.pending_count })}
+                      </span>
+                    </>}
               </p>
             )}
           </div>
@@ -99,25 +106,25 @@ export default function ValidationPage() {
         {/* Stats */}
         <div className="mb-6 grid grid-cols-4 gap-4">
           <StatCard
-            label="In Queue"
+            label={t("statInQueue")}
             value={data ? String(data.pending_count) : "—"}
-            sub="needs review"
+            sub={t("statNeedsReview")}
           />
           <StatCard
-            label="Total Issues"
+            label={t("statTotalIssues")}
             value={data ? String(data.total_errors) : "—"}
-            sub="validation errors"
+            sub={t("statValidationErrors")}
             valueClass={data && data.total_errors > 0 ? "text-red-600" : ""}
           />
           <StatCard
-            label="Avg Confidence"
+            label={t("statAvgConfidence")}
             value={data?.avg_confidence != null ? `${Math.round(data.avg_confidence * 100)}%` : "—"}
-            sub="AI extraction score"
+            sub={t("statAiScore")}
           />
           <StatCard
-            label="Error-free"
+            label={t("statErrorFree")}
             value={data ? String(data.error_free_count) : "—"}
-            sub="ready to approve"
+            sub={t("statReadyToApprove")}
             valueClass={data && data.error_free_count > 0 ? "text-green-600" : ""}
           />
         </div>
@@ -126,7 +133,7 @@ export default function ValidationPage() {
         {items.length === 0 ? (
           <div className="rounded-lg border border-dashed border-gray-300 bg-white py-20 text-center">
             <p className="text-sm font-medium text-gray-500">
-              {data ? "Queue is clear — no invoices need review" : "Loading…"}
+              {data ? t("queueEmpty") : t("loading")}
             </p>
           </div>
         ) : (
@@ -134,11 +141,11 @@ export default function ValidationPage() {
             <table className="w-full text-left text-sm">
               <thead className="border-b border-gray-200 bg-gray-50">
                 <tr className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  <th className="px-4 py-3">Filename</th>
-                  <th className="px-4 py-3">Seller</th>
-                  <th className="px-4 py-3">Issue</th>
-                  <th className="px-4 py-3">Confidence</th>
-                  <th className="px-4 py-3">Added</th>
+                  <th className="px-4 py-3">{t("filename")}</th>
+                  <th className="px-4 py-3">{t("colSeller")}</th>
+                  <th className="px-4 py-3">{t("colIssue")}</th>
+                  <th className="px-4 py-3">{t("colConfidence")}</th>
+                  <th className="px-4 py-3">{t("colAdded")}</th>
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
@@ -162,7 +169,7 @@ export default function ValidationPage() {
 
                       {/* Seller */}
                       <td className="px-4 py-3 text-gray-600 truncate max-w-[140px]">
-                        {doc.seller_name ?? <span className="text-gray-400 italic">unknown</span>}
+                        {doc.seller_name ?? <span className="text-gray-400 italic">{t("unknownSeller")}</span>}
                       </td>
 
                       {/* Error badge */}
@@ -182,7 +189,7 @@ export default function ValidationPage() {
                         ) : (
                           <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-700">
                             <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                            Clean
+                            {t("clean")}
                           </span>
                         )}
                       </td>
@@ -217,7 +224,7 @@ export default function ValidationPage() {
                           href={`/validation/${doc.id}`}
                           className="rounded bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
                         >
-                          Review
+                          {t("review")}
                         </Link>
                       </td>
                     </tr>
