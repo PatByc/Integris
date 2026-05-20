@@ -94,6 +94,30 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      {/* Problem */}
+      <section className="bg-gray-50 px-6 py-20">
+        <div className="mx-auto max-w-4xl">
+          <h2 className="mb-10 text-center text-2xl font-bold text-gray-900">{t("problemTitle")}</h2>
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
+            {([
+              { title: t("problem1Title"), body: t("problem1Body"), icon: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" },
+              { title: t("problem2Title"), body: t("problem2Body"), icon: "M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" },
+              { title: t("problem3Title"), body: t("problem3Body"), icon: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" },
+            ] as const).map(({ title, body, icon }) => (
+              <div key={title} className="flex flex-col items-start rounded-xl border border-red-100 bg-white p-6">
+                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-red-50">
+                  <svg className="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={icon} />
+                  </svg>
+                </div>
+                <h3 className="mb-2 text-sm font-semibold text-gray-900">{title}</h3>
+                <p className="text-sm leading-relaxed text-gray-500">{body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* What is Integris? — AEO: factual paragraph for AI citation */}
       <section className="bg-white px-6 py-12">
         <div className="mx-auto max-w-2xl text-center">

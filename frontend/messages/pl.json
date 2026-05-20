@@ -38,7 +38,14 @@
     "ctaTitle": "Gotowy połączyć faktury z KSeF?",
     "ctaSubtitle": "Bez konieczności migracji ERP. Zacznij przetwarzać faktury w kilka minut.",
     "whatIsTitle": "Czym jest Integris?",
-    "whatIsBody": "Integris to warstwa pośrednia KSeF dla polskich firm, które muszą wysyłać faktury elektroniczne do KSeF bez konieczności wymiany istniejącego systemu ERP. Przyjmuje faktury PDF, używa OCR i AI do ekstrakcji pól faktury, kieruje każdą fakturę przez obowiązkowy ekran weryfikacji ludzkiej, a następnie deterministycznie konwertuje zatwierdzone dane do XML FA(3) przed wysyłką do API KSeF."
+    "whatIsBody": "Integris to warstwa pośrednia KSeF dla polskich firm, które muszą wysyłać faktury elektroniczne do KSeF bez konieczności wymiany istniejącego systemu ERP. Przyjmuje faktury PDF, używa OCR i AI do ekstrakcji pól faktury, kieruje każdą fakturę przez obowiązkowy ekran weryfikacji ludzkiej, a następnie deterministycznie konwertuje zatwierdzone dane do XML FA(3) przed wysyłką do API KSeF.",
+    "problemTitle": "Jak wygląda obieg faktur bez Integris?",
+    "problem1Title": "Błędy przy ręcznym przepisywaniu",
+    "problem1Body": "Przenoszenie danych z PDF do ERP ręcznie generuje systematyczne pomyłki — złe kwoty, błędne NIP-y, pominięte pozycje.",
+    "problem2Title": "Chaos formatów i systemów",
+    "problem2Body": "Faktury przychodzą z maila, z Excela, z różnych szablonów. Każdy format wymaga oddzielnej uwagi — brak jednego miejsca kontroli.",
+    "problem3Title": "Skala rośnie, koszty rosną proporcjonalnie",
+    "problem3Body": "Więcej faktur = więcej godzin pracy ręcznej. Bez automatyzacji nie ma możliwości skalowania bez proporcjonalnego wzrostu zespołu."
   },
   "CookieBanner": {
     "text": "Ta strona używa plików cookies do zapamiętania języka i sesji logowania. Korzystając ze strony, akceptujesz ich użycie. Szczegóły znajdziesz w",
