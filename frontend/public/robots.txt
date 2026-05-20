@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+Disallow: /dashboard
+Disallow: /upload
+Disallow: /review
+Disallow: /audit
+Disallow: /settings
+Disallow: /help
+Disallow: /register
+Disallow: /api/
+
+Sitemap: https://integris.app/sitemap.xml

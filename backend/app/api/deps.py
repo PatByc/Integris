@@ -32,6 +32,7 @@ async def get_current_user(authorization: str = Header(...)) -> dict:
     return {
         "user_id": UUID(user_data["id"]),
         "email": user_data["email"],
+        "user_metadata": user_data.get("user_metadata", {}),
     }
 
 

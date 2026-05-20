@@ -16,6 +16,43 @@ export default async function LandingPage() {
   const t = await getTranslations("Landing");
 
   return (
+    <>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "Integris",
+          "description": "KSeF middleware for Polish companies — upload PDF invoices, review AI-extracted data, and submit compliant FA(3) XML to KSeF without replacing your ERP.",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web",
+          "url": "https://integris.app",
+          "offers": {
+            "@type": "AggregateOffer",
+            "priceCurrency": "PLN",
+            "lowPrice": "0",
+            "highPrice": "2499",
+            "offerCount": "4"
+          },
+          "featureList": [
+            "PDF invoice upload",
+            "OCR text extraction via Google Cloud Vision",
+            "AI-based invoice field extraction and normalization",
+            "Human review and correction screen",
+            "Deterministic FA(3) XML generation",
+            "KSeF API submission",
+            "UPO confirmation receipt",
+            "Full audit trail"
+          ],
+          "audience": {
+            "@type": "Audience",
+            "audienceType": "Polish companies and accounting offices",
+            "geographicArea": "Poland"
+          }
+        })
+      }}
+    />
     <div className="min-h-screen bg-white">
     <LandingNav />
 
@@ -54,6 +91,14 @@ export default async function LandingPage() {
               {t("getStartedFree")}
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* What is Integris? — AEO: factual paragraph for AI citation */}
+      <section className="bg-white px-6 py-12">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="mb-4 text-xl font-bold text-gray-900">{t("whatIsTitle")}</h2>
+          <p className="text-sm leading-relaxed text-gray-600">{t("whatIsBody")}</p>
         </div>
       </section>
 
@@ -178,5 +223,6 @@ export default async function LandingPage() {
         </Link>
       </footer>
     </div>
+    </>
   );
 }

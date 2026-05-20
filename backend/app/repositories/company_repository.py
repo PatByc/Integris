@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import select, update
@@ -67,11 +68,29 @@ async def create_membership(
     return membership
 
 
-async def upsert_profile(db: AsyncSession, user_id: UUID, email: str) -> Profile:
+async def upsert_profile(
+    db: AsyncSession,
+    user_id: UUID,
+    email: str,
+    tos_accepted_at: Optional[datetime] = None,
+    tos_version: Optional[str] = None,
+) -> Profile:
+    values: dict = {"id": user_id, "email": email}
+    if tos_accepted_at is not None:
+        values["tos_accepted_at"] = tos_accepted_at
+    if tos_version is not None:
+        values["tos_version"] = tos_version
+
+    update_set: dict = {"email": email}
+    if tos_accepted_at is not None:
+        update_set["tos_accepted_at"] = tos_accepted_at
+    if tos_version is not None:
+        update_set["tos_version"] = tos_version
+
     stmt = (
         insert(Profile)
-        .values(id=user_id, email=email)
-        .on_conflict_do_update(index_elements=["id"], set_={"email": email})
+        .values(**values)
+        .on_conflict_do_update(index_elements=["id"], set_=update_set)
         .returning(Profile)
     )
     result = await db.execute(stmt)

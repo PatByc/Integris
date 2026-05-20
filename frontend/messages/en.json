@@ -36,7 +36,9 @@
     "pricingDocsUnlimited": "Unlimited",
     "seePricingDetails": "See all plans →",
     "ctaTitle": "Ready to connect your invoices to KSeF?",
-    "ctaSubtitle": "No ERP migration required. Start processing invoices in minutes."
+    "ctaSubtitle": "No ERP migration required. Start processing invoices in minutes.",
+    "whatIsTitle": "What is Integris?",
+    "whatIsBody": "Integris is a KSeF middleware for Polish companies that need to submit electronic invoices to KSeF without replacing their existing ERP or accounting software. It accepts PDF invoices, uses OCR and AI to extract invoice fields, routes every invoice through a mandatory human review screen, and deterministically converts approved data to FA(3) XML before submitting to the KSeF API."
   },
   "CookieBanner": {
     "text": "This site uses cookies to remember your language preference and login session. By using the site, you accept their use. See our",

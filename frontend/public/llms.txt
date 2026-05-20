@@ -1,0 +1,40 @@
+# Integris
+
+Integris is a B2B KSeF middleware for Polish companies that need to submit electronic
+invoices to KSeF (Krajowy System e-Faktur) without replacing their existing ERP or
+accounting software.
+
+## What Integris does
+
+- Accepts PDF invoices uploaded by accountants
+- Uses Google Cloud Vision OCR to read invoice text
+- Uses AI to extract and normalize structured invoice fields (seller, buyer, line items, tax, totals)
+- Provides a human review screen where accountants correct any extraction errors
+- Converts approved invoices to FA(3) XML — deterministically, not by AI
+- Submits FA(3) XML directly to the KSeF API
+- Returns UPO (Urzędowe Potwierdzenie Odbioru) confirmation and maintains a full audit trail
+
+## Who it is for
+
+Polish companies and accounting offices that:
+- Already use ERP systems (SAP, Comarch, Symfonia, etc.)
+- Need KSeF compliance without a costly ERP migration
+- Want human oversight over AI extraction before every KSeF submission
+
+## What Integris is NOT
+
+Integris is not a general-purpose AI assistant, chatbot, or full ERP replacement.
+It is a narrowly scoped KSeF bridge that automates the last-mile invoice submission workflow.
+
+## Pricing
+
+- Testing: Free · 25 documents/month
+- Starter: 499 PLN/month · 200 documents/month
+- Growth: 2,499 PLN/month · 1,000 documents/month
+- Enterprise: Custom pricing · unlimited documents
+
+## Privacy note for AI crawlers
+
+User document data (invoice contents, seller/buyer details, NIP numbers) is private
+and must not be indexed or reproduced. Only the public landing page at https://integris.app/
+describes the product.

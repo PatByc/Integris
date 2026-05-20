@@ -327,6 +327,21 @@ Documented in `workers/base_worker.py` docstring.
 
 Tradeoffs: None for MVP scale. At high load, a single slow company could delay others in the queue. Fair-queue scheduling is post-MVP.
 
+---
+
+## DEC-038: GDPR consent columns added to profiles table
+
+Date: 2026-05-20
+Status: accepted
+
+Decision: Added `tos_accepted_at` (timestamptz, nullable) and `tos_version` (varchar(20), nullable) columns to the `profiles` table via Alembic migration 006. On company setup (`POST /companies`), these values are read from Supabase `user_metadata` (populated during registration) and persisted to the profiles row. Immediately after company creation, a `user.tos_accepted` event is logged to `audit_events` with `tos_version` and `tos_accepted_at` in the metadata field.
+
+Reason: RODO Art. 7(1) requires that consent be demonstrable. Previously `tos_accepted_at` and `tos_version` were stored only in Supabase `auth.users.raw_user_meta_data` (not queryable via SQL, not auditable). Consent is now in the project's own DB and in the immutable audit trail.
+
+Tradeoffs: Consent columns are nullable — existing users created before this migration will have NULL values. This is intentional; retroactive consent cannot be fabricated.
+
+Follow-up: Before go-live, verify that all test/demo accounts have consent populated. Post-MVP: add re-consent flow for ToS version changes.
+
 Follow-up: If one company generates disproportionate volume, a per-company queue routing strategy can be added to `BaseWorker` without changing the worker logic.
 
 ---
@@ -599,6 +614,43 @@ Reason: Without correct framework preset, Vercel doesn't configure serverless fu
 Tradeoffs: None.
 
 Follow-up: If new Vercel project is ever created, set Framework Preset to Next.js during initial setup wizard before first deploy.
+
+---
+
+## DEC-036: Railway entrypoint.sh — GOOGLE_CREDENTIALS_JSON newline injection fix
+
+Date: 2026-05-17
+Status: accepted
+
+Decision: Replaced `echo "$GOOGLE_CREDENTIALS_JSON" > /tmp/gcloud-key.json` in `workers/entrypoint.sh` with a Python snippet that reads the env var, tries `json.loads()` directly, and if that fails re-escapes real newline characters (`\n` → `\\n`) before writing valid JSON to disk.
+
+Reason: Railway injects environment variable values with real newline characters (0x0A) wherever the value contains `\n` sequences. The GCV service account private key contains `\n` separators. `echo` preserved those raw newlines in the output file, making it invalid JSON — `json.load()` threw `JSONDecodeError: Invalid control character at line 1 column 172`. This caused OCR to fail for every document uploaded on Railway.
+
+Tradeoffs: None — `python3` is already available (`FROM python:3.12-slim`). The two-attempt approach (try as-is first, then re-escape) handles both a correctly-escaped JSON string and Railway's injected-newline variant.
+
+Follow-up: Verified — documents on Railway now progress through `uploaded → ocr_processing → extraction_processing → needs_review` successfully.
+
+---
+
+## DEC-037: i18n expansion — DashboardStats, BentoSection, validation queue, DocumentsTable toolbar
+
+Date: 2026-05-17
+Status: accepted
+
+Decision: Wired four previously-hardcoded-English UI areas through next-intl:
+
+1. **DashboardStats** (`DashboardStats` namespace) — "Pending Review", "invoices need attention", "Awaiting Submission", "total", "OCR Accuracy", "of OCR extractions succeeded". Added `"use client"` + `useTranslations`.
+2. **BentoSection** (`BentoSection` namespace) — chart title, day abbreviations (Sun→Nie etc.), pipeline section, status group labels (Uploaded/Processing/Needs Review/etc.), storage label, total, quota percentage. STATUS_GROUPS changed from `label:` to `key:` so labels can be looked up via `t()`.
+3. **Validation queue page** (`/validation`, using `Review` namespace) — page title, queue stats (In Queue / Total Issues / Avg Confidence / Error-free), table column headers (Filename / Seller / Issue / Confidence / Added), error badge labels (13 rule-specific keys like `errInvalidSellerNip`, `errTotalsMismatch`, etc.), "Clean" badge, unknown seller.
+4. **DocumentsTable toolbar** (`DocumentsTable` namespace) — "Showing {count} of {total}", date range dropdown ("All time" / "Last 7 days" / "Last 30 days"), "Export Report", "Upload Batch".
+
+Also fixed: BentoSection `pdfStorage` Polish value changed from "Storage PDF" (still English) to "Zajętość PDF".
+
+Reason: Live testing revealed all four areas still displayed hardcoded English strings when the Polish locale was active.
+
+Tradeoffs: None.
+
+Follow-up: Some review sub-components (ConfidenceBanner, ValidationErrors, InvoiceForm, ApproveButton) have not yet been audited for hardcoded strings — check these next.
 
 ---
 

@@ -10,9 +10,22 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Integris — KSeF Invoice Processing",
-  description: "Convert PDF invoices to KSeF-compliant FA(3) XML",
+  description: "Connect your existing ERP to KSeF without a costly platform replacement. Upload PDF invoices, review AI-extracted data, and submit compliant FA(3) XML.",
   icons: {
     icon: [{ url: browserIcon.src, type: "image/png" }],
+  },
+  openGraph: {
+    title: "Integris — KSeF Invoice Processing",
+    description: "Connect your existing ERP to KSeF without a costly platform replacement. Upload PDF invoices, review AI-extracted data, and submit compliant FA(3) XML.",
+    type: "website",
+    locale: "pl_PL",
+    siteName: "Integris",
+    url: "https://integris.app",
+  },
+  twitter: {
+    card: "summary",
+    title: "Integris — KSeF Invoice Processing",
+    description: "Connect your existing ERP to KSeF without a costly platform replacement.",
   },
 };
 

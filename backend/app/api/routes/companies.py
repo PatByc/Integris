@@ -27,6 +27,7 @@ async def create_company(
         name=body.name,
         nip=body.nip,
         plan_type=body.plan_type,
+        user_metadata=user.get("user_metadata"),
     )
     await db.commit()
     return MembershipOut(
